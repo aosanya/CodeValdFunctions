@@ -2,10 +2,12 @@
 
 ## Overview
 
-**CodeValdFunctions** is a Go gRPC microservice that provides Git-based artifact management
-for the CodeVald platform. It is accessible to other platform services via CodeValdCross’s HTTP proxy.
+**CodeValdFunctions** is a Go gRPC microservice that provides a general-purpose
+compute workhorse for the CodeVald platform. It runs pre-built functions against
+data owned by other CodeVald services (CodeValdGit, CodeValdDT, CodeValdComm, etc.)
+in response to platform events or (future) scheduled triggers.
 
-It replaces the custom hand-rolled Git engine (`internal/git/`) with a proper Git implementation backed by [go-git](https://github.com/go-git/go-git).
+It is scoped per-agency at construction time — the same pattern as CodeValdGit.
 
 ---
 
@@ -13,27 +15,19 @@ It replaces the custom hand-rolled Git engine (`internal/git/`) with a proper Gi
 
 | Document | Description |
 |---|---|
-| [1-SoftwareRequirements/](1-SoftwareRequirements/README.md) | What the library must do — scope, FR, NFR, introduction |
-| [2-SoftwareDesignAndArchitecture/](2-SoftwareDesignAndArchitecture/README.md) | Design decisions, storage backends, branching model, API draft |
+| [1-SoftwareRequirements/](1-SoftwareRequirements/README.md) | Scope, functional requirements, NFR |
+| [2-SoftwareDesignAndArchitecture/](2-SoftwareDesignAndArchitecture/README.md) | Architecture decisions, entity schema, event model |
 | [3-SofwareDevelopment/](3-SofwareDevelopment/README.md) | MVP task list, implementation details per topic |
-| [4-QA/](4-QA/README.md) | Testing strategy, acceptance criteria, QA standards |
-
-### Key Files
-
-| File | Description |
-|---|---|
-| [1-SoftwareRequirements/requirements.md](1-SoftwareRequirements/requirements.md) | Functional requirements (FR-001–FR-008), NFR, resolved open questions |
-| [2-SoftwareDesignAndArchitecture/architecture.md](2-SoftwareDesignAndArchitecture/architecture.md) | Core design decisions, repo structure, branching model, API interfaces |
-| [3-SofwareDevelopment/mvp.md](3-SofwareDevelopment/mvp.md) | MVP task list and status |
-| [3-SofwareDevelopment/mvp-details/](3-SofwareDevelopment/mvp-details/README.md) | Per-topic task specifications |
+| [4-QA/](4-QA/README.md) | Testing strategy, acceptance criteria |
 
 ---
 
 ## Quick Summary
 
 - **Language**: Go
-- **Core dependency**: [go-git](https://github.com/go-git/go-git)
+- **Service type**: Long-lived gRPC service (same pattern as CodeValdGit)
 - **Consumer**: Platform services via CodeValdCross HTTP proxy
-- **Unit of repo**: 1 Git repository per Agency
-- **Branching model**: Agents always work on `task/{task-id}` branches; auto-merged to `main` on task completion
-- **Artifact types**: Any file — code, Markdown, YAML configs, reports, etc.
+- **Agency scope**: One service instance per agency
+- **Trigger model**: Event-driven (CodeValdCross subscriber); scheduler planned for future
+- **Core entity**: `Job` — tracks a function execution triggered by a platform event
+- **Function model**: Pre-built functions, statically registered, extensible over time

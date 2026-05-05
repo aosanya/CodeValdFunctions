@@ -2,7 +2,8 @@
 
 ## Overview
 
-This section tracks the development plan, MVP task breakdown, and implementation details for CodeValdFunctions.
+This section tracks the development plan, MVP task breakdown, and implementation
+details for CodeValdFunctions.
 
 ---
 
@@ -19,30 +20,30 @@ This section tracks the development plan, MVP task breakdown, and implementation
 
 | Task ID | Title | Status |
 |---|---|---|
-| MVP-GIT-001 | Library Scaffolding | 🔲 Not Started |
-| MVP-GIT-002 | Filesystem Repo Lifecycle | 🔲 Not Started |
-| MVP-GIT-003 | Branch-Per-Task Workflow | 🔲 Not Started |
-| MVP-GIT-004 | File Operations & Commit Attribution | 🔲 Not Started |
-| MVP-GIT-005 | Fast-Forward Merge | 🔲 Not Started |
-| MVP-GIT-006 | Auto-Rebase & Conflict Resolution | 🔲 Not Started |
-| MVP-GIT-007 | History & Diff (UI Read Access) | 🔲 Not Started |
-| MVP-GIT-008 | ArangoDB Storage Backend | 🔲 Not Started |
-| MVP-GIT-009 | CodeValdCross Integration | 🔲 Not Started |
+| MVP-FN-001 | Service Scaffolding | 🔲 Not Started |
+| MVP-FN-002 | Job Entity Schema | 🔲 Not Started |
+| MVP-FN-003 | Job Lifecycle & CRUD | 🔲 Not Started |
+| MVP-FN-004 | Event Subscription (CodeValdCross) | 🔲 Not Started |
+| MVP-FN-005 | Function Registry & Dispatch | 🔲 Not Started |
+| MVP-FN-006 | Job gRPC API | 🔲 Not Started |
+| MVP-FN-007 | Scheduler | 🔲 Future |
 
 ---
 
 ## Execution Order
 
 ```
-MVP-GIT-001 → MVP-GIT-002 → MVP-GIT-003 → MVP-GIT-004
-                                ↓
-                          MVP-GIT-005 → MVP-GIT-006
-                                ↓
-                          MVP-GIT-007
-                                ↓
-MVP-GIT-008 (parallel track)
-                                ↓
-                          MVP-GIT-009 (integration — last)
+MVP-FN-001 (Scaffolding)
+    ↓
+MVP-FN-002 (Job Schema)
+    ↓
+MVP-FN-003 (Job Lifecycle)
+    ↓
+MVP-FN-004 (Event Subscription) ──── MVP-FN-006 (gRPC API)
+    ↓
+MVP-FN-005 (Function Registry)
+
+MVP-FN-007 (Scheduler) — future, independent track
 ```
 
 ---
@@ -51,9 +52,9 @@ MVP-GIT-008 (parallel track)
 
 | File | Tasks |
 |---|---|
-| [mvp-details/repo-management.md](mvp-details/repo-management.md) | MVP-GIT-001, MVP-GIT-002 |
-| [mvp-details/branch-workflow.md](mvp-details/branch-workflow.md) | MVP-GIT-003, MVP-GIT-005, MVP-GIT-006 |
-| [mvp-details/file-operations.md](mvp-details/file-operations.md) | MVP-GIT-004 |
-| [mvp-details/history-and-diff.md](mvp-details/history-and-diff.md) | MVP-GIT-007 |
-| [mvp-details/storage-backends.md](mvp-details/storage-backends.md) | MVP-GIT-008 |
-| [mvp-details/integration.md](mvp-details/integration.md) | MVP-GIT-009 |
+| [mvp-details/platform.md](mvp-details/platform.md) | MVP-FN-001 |
+| [mvp-details/job-lifecycle.md](mvp-details/job-lifecycle.md) | MVP-FN-002, MVP-FN-003 |
+| [mvp-details/event-subscription.md](mvp-details/event-subscription.md) | MVP-FN-004 |
+| [mvp-details/function-registry.md](mvp-details/function-registry.md) | MVP-FN-005 |
+| [mvp-details/grpc-api.md](mvp-details/grpc-api.md) | MVP-FN-006 |
+| [mvp-details/scheduler.md](mvp-details/scheduler.md) | MVP-FN-007 (future) |
