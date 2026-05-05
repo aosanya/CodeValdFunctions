@@ -72,7 +72,7 @@ func (m *gitManager) FetchBranch(ctx context.Context, req FetchBranchRequest) (F
 	// If the branch already has a HEAD commit, its commits/trees/blobs were
 	// populated by push-indexing (or a prior successful fetch) and the objects
 	// live in the backend storer — re-cloning from source_url is unnecessary
-	// and will fail for branches that were pushed to CodeValdGit but never
+	// and will fail for branches that were pushed to CodeValdFunctions but never
 	// existed on the import origin.
 	now := time.Now().UTC().Format(time.RFC3339)
 	if headCommitID != "" {

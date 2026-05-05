@@ -1,8 +1,8 @@
-# CodeValdGit — MVP Details
+# CodeValdFunctions — MVP Details
 
 ## Domain Overview
 
-CodeValdGit is a Go library that provides Git-based artifact versioning for **CodeValdCross**, the enterprise multi-agent AI orchestration platform. It replaces the custom hand-rolled Git engine (`internal/git/`) in CodeValdCross with a proper Git implementation backed by [go-git](https://github.com/go-git/go-git).
+CodeValdFunctions is a Go library that provides Git-based artifact versioning for **CodeValdCross**, the enterprise multi-agent AI orchestration platform. It replaces the custom hand-rolled Git engine (`internal/git/`) in CodeValdCross with a proper Git implementation backed by [go-git](https://github.com/go-git/go-git).
 
 ---
 

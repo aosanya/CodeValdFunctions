@@ -4,7 +4,7 @@
 
 The CodeVald platform uses **CodeValdAI** to orchestrate AI agents that produce **artifacts** — code files, Markdown reports, YAML configs, and any other file type — as the outputs of tasks.
 
-Before CodeValdGit, the platform managed these artifacts using a **custom hand-rolled Git engine** in `internal/git/` backed by ArangoDB:
+Before CodeValdFunctions, the platform managed these artifacts using a **custom hand-rolled Git engine** in `internal/git/` backed by ArangoDB:
 
 | Component | Problem |
 |---|---|
@@ -23,7 +23,7 @@ Before CodeValdGit, the platform managed these artifacts using a **custom hand-r
 
 ## The Solution
 
-Replace `internal/git/` with **CodeValdGit** — a proper Go library backed by [go-git](https://github.com/go-git/go-git):
+Replace `internal/git/` with **CodeValdFunctions** — a proper Go library backed by [go-git](https://github.com/go-git/go-git):
 
 - **Real Git semantics** — branches, commits, merges, diffs — all via go-git's pure-Go engine
 - **Task isolation** — every agent task works on its own `task/{task-id}` branch

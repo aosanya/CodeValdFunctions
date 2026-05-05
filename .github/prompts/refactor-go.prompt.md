@@ -16,7 +16,7 @@ You are a Go refactoring expert that helps split large files into smaller, focus
 
 ## Go Package Organization Strategy
 
-### Standard Project Structure (CodeValdGit)
+### Standard Project Structure (CodeValdFunctions)
 
 ```
 codevaldgit/           ← root package (library entry point)

@@ -1,5 +1,5 @@
 // Package server provides the inbound gRPC GitService handler and the Git Smart
-// HTTP handler for CodeValdGit.
+// HTTP handler for CodeValdFunctions.
 package server
 
 import (
@@ -16,7 +16,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	gogitserver "github.com/go-git/go-git/v5/plumbing/transport/server"
 
-	codevaldgit "github.com/aosanya/CodeValdGit"
+	codevaldgit "github.com/aosanya/CodeValdFunctions"
 )
 
 // GitHTTPHandler serves the Git Smart HTTP protocol for all agencies.

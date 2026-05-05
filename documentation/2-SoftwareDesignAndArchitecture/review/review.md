@@ -1,4 +1,4 @@
-# CodeValdGit — Architecture Review
+# CodeValdFunctions — Architecture Review
 
 > Reviewed: March 2026
 > Addressed items link to the decision documents that resolved them.
@@ -212,7 +212,7 @@ Using `agencyID` directly in the URL path requires defining:
 
 ### 14. Disaster recovery / backup strategy is missing
 
-CodeValdGit becomes a system of record for generated files. Open questions:
+CodeValdFunctions becomes a system of record for generated files. Open questions:
 - Backup unit: per-agency repo, per-backend, or snapshots?
 - How to restore a single agency.
 - How to verify object/ref consistency after restore.

@@ -1,4 +1,4 @@
-# CodeValdGit — Transaction Boundaries and Idempotency
+# CodeValdFunctions — Transaction Boundaries and Idempotency
 
 > Source: `review/review.md` (March 2026 design review)
 > Status: Defined — implementation tracked in `mvp.md` (GIT-013)

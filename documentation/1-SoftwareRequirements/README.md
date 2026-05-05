@@ -2,7 +2,7 @@
 
 ## Overview
 
-This section captures everything **what** CodeValdGit must do and **why** — without prescribing how.
+This section captures everything **what** CodeValdFunctions must do and **why** — without prescribing how.
 
 ---
 
@@ -19,7 +19,7 @@ This section captures everything **what** CodeValdGit must do and **why** — wi
 
 ## Summary
 
-CodeValdGit is a **Go library** that provides Git-based artifact versioning for [CodeValdCross](../../CodeValdCross/README.md). It replaces the hand-rolled Git engine (`internal/git/`) with proper Git semantics backed by [go-git](https://github.com/go-git/go-git).
+CodeValdFunctions is a **Go library** that provides Git-based artifact versioning for [CodeValdCross](../../CodeValdCross/README.md). It replaces the hand-rolled Git engine (`internal/git/`) with proper Git semantics backed by [go-git](https://github.com/go-git/go-git).
 
 ### Core Requirements at a Glance
 

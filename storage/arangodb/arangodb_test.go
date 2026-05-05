@@ -1,4 +1,4 @@
-// Package arangodb_test provides integration tests for the CodeValdGit
+// Package arangodb_test provides integration tests for the CodeValdFunctions
 // ArangoDB backend.
 //
 // Tests in this file require a running ArangoDB instance. They connect to a
@@ -23,8 +23,8 @@ import (
 	driver "github.com/arangodb/go-driver"
 	driverhttp "github.com/arangodb/go-driver/http"
 
-	codevaldgit "github.com/aosanya/CodeValdGit"
-	"github.com/aosanya/CodeValdGit/storage/arangodb"
+	codevaldgit "github.com/aosanya/CodeValdFunctions"
+	"github.com/aosanya/CodeValdFunctions/storage/arangodb"
 	"github.com/aosanya/CodeValdSharedLib/entitygraph"
 )
 

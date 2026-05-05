@@ -50,8 +50,8 @@ Named graph: `git_graph`
 - The schema is seeded from `DefaultGitSchema()` in `schema.go` via the
   `entitygraph.SchemaManager` interface.
 
-The `storage/arangodb` package in CodeValdGit is a **thin adapter** — it maps
-CodeValdGit-specific collection and graph names into the shared config and
+The `storage/arangodb` package in CodeValdFunctions is a **thin adapter** — it maps
+CodeValdFunctions-specific collection and graph names into the shared config and
 delegates all operations to `CodeValdSharedLib/entitygraph/arangodb`.
 
 ---

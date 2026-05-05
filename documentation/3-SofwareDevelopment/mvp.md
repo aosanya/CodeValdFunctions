@@ -1,7 +1,7 @@
 # MVP — Active Task Backlog
 
 ## Overview
-- **Objective**: Deliver CodeValdGit as a production-ready standalone gRPC microservice with full Git semantics, entity-graph storage, and documentation layer.
+- **Objective**: Deliver CodeValdFunctions as a production-ready standalone gRPC microservice with full Git semantics, entity-graph storage, and documentation layer.
 - **Completed tasks**: see [`mvp_done.md`](mvp_done.md)
 - **Detailed specs**: see [`mvp-details/`](mvp-details/)
 

@@ -12,22 +12,22 @@
 ## MVP-GIT-009 — CodeValdCross Integration
 
 ### Overview
-Wire CodeValdGit into CodeValdCross as a drop-in replacement for the custom `internal/git/` package. This task covers: adding CodeValdGit as a dependency, updating the CodeValdCross lifecycle hooks (agency create/delete, task start/complete), deleting the replaced packages, and dropping the ArangoDB Git collections.
+Wire CodeValdFunctions into CodeValdCross as a drop-in replacement for the custom `internal/git/` package. This task covers: adding CodeValdFunctions as a dependency, updating the CodeValdCross lifecycle hooks (agency create/delete, task start/complete), deleting the replaced packages, and dropping the ArangoDB Git collections.
 
 This is the final MVP task. All earlier tasks must be complete and tested before starting integration.
 
 ### Acceptance Criteria
-- [ ] `go.mod` in CodeValdCross references `github.com/aosanya/CodeValdGit`
+- [ ] `go.mod` in CodeValdCross references `github.com/aosanya/CodeValdFunctions`
 - [ ] `internal/git/` is fully deleted from CodeValdCross
 - [ ] All compilation errors from the deletion are resolved
 - [ ] `git_objects`, `git_refs`, `repositories` ArangoDB collections are no longer used (collections may be dropped via a migration script)
-- [ ] All five CodeValdCross lifecycle events call the correct CodeValdGit operations (see mapping table below)
+- [ ] All five CodeValdCross lifecycle events call the correct CodeValdFunctions operations (see mapping table below)
 - [ ] Existing integration tests for agent file output pass
 - [ ] No regressions in CodeValdCross's test suite
 
 ### Lifecycle Hook Mapping
 
-| CodeValdCross Event | Location | CodeValdGit Call |
+| CodeValdCross Event | Location | CodeValdFunctions Call |
 |---|---|---|
 | Agency created | `internal/agency/service.go` — `CreateAgency` | `RepoManager.InitRepo(agencyID)` |
 | Agency deleted | `internal/agency/service.go` — `DeleteAgency` | `RepoManager.DeleteRepo(agencyID)` |
@@ -158,8 +158,8 @@ Create a migration script at `scripts/migrate-to-codevaldgit.sh`:
 
 ```bash
 #!/bin/bash
-# Drops legacy ArangoDB Git collections after CodeValdGit integration.
-# Run ONLY after verifying CodeValdGit is working in production.
+# Drops legacy ArangoDB Git collections after CodeValdFunctions integration.
+# Run ONLY after verifying CodeValdFunctions is working in production.
 set -e
 
 ARANGO_URL="${ARANGO_URL:-http://localhost:8529}"
@@ -235,8 +235,8 @@ All of:
 
 ### Rollout Plan
 
-1. **Feature flag**: Gate CodeValdGit behind `GIT_BACKEND=codevaldgit` env var initially
-2. **Parallel run** (optional): Run both `internal/git/` and CodeValdGit for a short period; compare outputs
+1. **Feature flag**: Gate CodeValdFunctions behind `GIT_BACKEND=codevaldgit` env var initially
+2. **Parallel run** (optional): Run both `internal/git/` and CodeValdFunctions for a short period; compare outputs
 3. **Cut over**: Set `GIT_BACKEND=codevaldgit` in production
 4. **Cleanup**: Delete `internal/git/` packages and drop legacy collections
 5. **Remove feature flag**: Clean up the conditional after validation
@@ -245,7 +245,7 @@ All of:
 
 | Risk | Mitigation |
 |---|---|
-| Data in legacy `git_objects` not migrated | No migration needed — ArangoDB Git collections are standalone versioning; existing artifact history in ArangoDB is superseded by CodeValdGit from integration date |
+| Data in legacy `git_objects` not migrated | No migration needed — ArangoDB Git collections are standalone versioning; existing artifact history in ArangoDB is superseded by CodeValdFunctions from integration date |
 | Concurrent writes from multiple CodeValdCross replicas | Each `Repo` call is per-task; task branches are isolated; main is only updated at task completion — low collision risk for MVP |
 | go-git rebase edge cases | Covered by MVP-GIT-006 tests; `ErrMergeConflict` provides a safe fallback path |
 | Volume provisioning for filesystem backend | Document that `/data/repos` must be a persistent volume in Kubernetes deployments |

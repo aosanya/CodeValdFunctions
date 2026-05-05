@@ -4,11 +4,11 @@ agent: agent
 
 # Research go-git API Usage
 
-This prompt guides research into the go-git library to resolve specific implementation questions for CodeValdGit.
+This prompt guides research into the go-git library to resolve specific implementation questions for CodeValdFunctions.
 
 ## Objective
 
-Find accurate, version-specific go-git API usage for a given operation. CodeValdGit uses **go-git v5** (`github.com/go-git/go-git/v5`).
+Find accurate, version-specific go-git API usage for a given operation. CodeValdFunctions uses **go-git v5** (`github.com/go-git/go-git/v5`).
 
 ## Steps
 

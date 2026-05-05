@@ -1,5 +1,5 @@
 // Package registrar — import_routes.go
-// Repository import HTTP routes for CodeValdGit via CodeValdCross.
+// Repository import HTTP routes for CodeValdFunctions via CodeValdCross.
 package registrar
 
 import "github.com/aosanya/CodeValdSharedLib/types"

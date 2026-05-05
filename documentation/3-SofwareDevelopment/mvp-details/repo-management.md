@@ -10,7 +10,7 @@ Topics: Library Scaffolding · Filesystem Repo Lifecycle
 Establish the Go module, public package structure, core interfaces, and shared types that all other MVP tasks build on. Nothing else can proceed without this foundation.
 
 ### Acceptance Criteria
-- [ ] `go.mod` declares module `github.com/aosanya/CodeValdGit`
+- [ ] `go.mod` declares module `github.com/aosanya/CodeValdFunctions`
 - [ ] Core interfaces `RepoManager` and `Repo` are defined in the public package
 - [ ] Shared types `FileEntry`, `Commit`, `FileDiff`, `ErrMergeConflict` are defined
 - [ ] Package compiles cleanly with `go build ./...`
@@ -20,7 +20,7 @@ Establish the Go module, public package structure, core interfaces, and shared t
 ### Package Structure
 
 ```
-github.com/aosanya/CodeValdGit/
+github.com/aosanya/CodeValdFunctions/
 ├── codevaldgit.go          # Package-level doc, RepoManager + Repo + Backend interfaces
 ├── types.go                # FileEntry, Commit, FileDiff, AuthorInfo, ErrMergeConflict
 ├── errors.go               # Sentinel errors (ErrRepoNotFound, ErrBranchNotFound, etc.)

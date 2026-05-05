@@ -1,8 +1,8 @@
-# CodeValdGit — Documentation
+# CodeValdFunctions — Documentation
 
 ## Overview
 
-**CodeValdGit** is a Go gRPC microservice that provides Git-based artifact management
+**CodeValdFunctions** is a Go gRPC microservice that provides Git-based artifact management
 for the CodeVald platform. It is accessible to other platform services via CodeValdCross’s HTTP proxy.
 
 It replaces the custom hand-rolled Git engine (`internal/git/`) with a proper Git implementation backed by [go-git](https://github.com/go-git/go-git).

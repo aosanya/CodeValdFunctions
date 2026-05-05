@@ -14,8 +14,8 @@ and into `internal/clients/git/` inside CodeValdCross. Expose them through a
 `NewHTTPServer` never names `clients/git` directly — it mounts whatever routes
 are handed to it.
 
-This task is the CodeValdGit-side deliverable of the pattern decision made in
-**CROSS-007**. It has no changes to CodeValdGit itself — all changes live in the
+This task is the CodeValdFunctions-side deliverable of the pattern decision made in
+**CROSS-007**. It has no changes to CodeValdFunctions itself — all changes live in the
 CodeValdCross module, specifically in `internal/clients/git/`.
 
 ---
@@ -37,7 +37,7 @@ CodeValdCross module, specifically in `internal/clients/git/`.
       (no circular imports)
 - [ ] Exported function:
   ```go
-  // Routes returns the HTTP routes backed by CodeValdGit operations.
+  // Routes returns the HTTP routes backed by CodeValdFunctions operations.
   // Pass the result to server.NewHTTPServer alongside routes from other
   // client packages.
   func Routes(orch *orchestrator.Orchestrator) []server.Route
@@ -61,9 +61,9 @@ CodeValdCross module, specifically in `internal/clients/git/`.
 
 ---
 
-### What Does NOT Change in CodeValdGit
+### What Does NOT Change in CodeValdFunctions
 
-This task makes no changes to the CodeValdGit repository. The proto definitions,
+This task makes no changes to the CodeValdFunctions repository. The proto definitions,
 gRPC server, and generated stubs are untouched. The git client interface
 (`GitClient`) gains no new methods.
 

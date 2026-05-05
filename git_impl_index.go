@@ -14,7 +14,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/filemode"
 	gogitobject "github.com/go-git/go-git/v5/plumbing/object"
 
-	"github.com/aosanya/CodeValdGit/internal/gitgraph"
+	"github.com/aosanya/CodeValdFunctions/internal/gitgraph"
 )
 
 // syncGitGraph reads all .git-graph/*.json files at the pushed commit tip,

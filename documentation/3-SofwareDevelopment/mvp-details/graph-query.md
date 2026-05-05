@@ -4,7 +4,7 @@
 
 A flexible server-side graph query endpoint that returns the top N graph nodes and
 their edges, filtered across five dimensions and sorted by signal strength. Designed
-to serve the city-plan Graph page in CodeValdGitFrontend (GITFE-019) as its sole
+to serve the city-plan Graph page in CodeValdFunctionsFrontend (GITFE-019) as its sole
 data source, replacing the combination of `SearchByKeywords` + `GetNeighborhood`
 for that surface.
 

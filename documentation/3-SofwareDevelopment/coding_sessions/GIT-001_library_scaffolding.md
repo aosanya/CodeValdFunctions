@@ -9,7 +9,7 @@
 
 ## What Was Built
 
-Established the complete Go module foundation for `github.com/aosanya/CodeValdGit`.
+Established the complete Go module foundation for `github.com/aosanya/CodeValdFunctions`.
 
 ### Files Created
 
@@ -34,7 +34,7 @@ Established the complete Go module foundation for `github.com/aosanya/CodeValdGi
 
 ## Acceptance Criteria — All Met
 
-- [x] `go.mod` declares module `github.com/aosanya/CodeValdGit`
+- [x] `go.mod` declares module `github.com/aosanya/CodeValdFunctions`
 - [x] Core interfaces `RepoManager` and `Repo` defined in the public package
 - [x] Shared types `FileEntry`, `Commit`, `FileDiff`, `ErrMergeConflict` defined
 - [x] `go build ./...` passes cleanly
@@ -51,7 +51,7 @@ Established the complete Go module foundation for `github.com/aosanya/CodeValdGi
 === RUN   TestFileDiff_JSONRoundTrip      --- PASS
 === RUN   TestErrMergeConflict_Error      --- PASS
 === RUN   TestSentinelErrors_NotNil       --- PASS
-ok      github.com/aosanya/CodeValdGit
+ok      github.com/aosanya/CodeValdFunctions
 ```
 
 `go vet ./...` — 0 issues.

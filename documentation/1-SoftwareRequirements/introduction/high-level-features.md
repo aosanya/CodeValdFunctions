@@ -2,7 +2,7 @@
 
 ## Feature Overview
 
-CodeValdGit provides the following top-level capabilities to CodeValdCross:
+CodeValdFunctions provides the following top-level capabilities to CodeValdCross:
 
 ---
 
@@ -40,7 +40,7 @@ CodeValdGit provides the following top-level capabilities to CodeValdCross:
 
 ---
 
-## What CodeValdGit Does NOT Do
+## What CodeValdFunctions Does NOT Do
 
 | Out of Scope | Reason |
 |---|---|

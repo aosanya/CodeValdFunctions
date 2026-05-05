@@ -4,9 +4,9 @@ agent: agent
 
 # Start New Task
 
-> ⚠️ **Before starting a new task**, run `CodeValdGit/.github/prompts/finish-task.prompt.md` to ensure any in-progress task is properly completed and merged first.
+> ⚠️ **Before starting a new task**, run `CodeValdFunctions/.github/prompts/finish-task.prompt.md` to ensure any in-progress task is properly completed and merged first.
 
-Follow the **mandatory task startup process** for CodeValdGit tasks:
+Follow the **mandatory task startup process** for CodeValdFunctions tasks:
 
 ## Task Startup Process (MANDATORY)
 
@@ -25,7 +25,7 @@ Follow the **mandatory task startup process** for CodeValdGit tasks:
 
 3. **Create feature branch from `main`**
    ```bash
-   cd /workspaces/CodeValdGit
+   cd /workspaces/CodeValdFunctions
    git checkout main
    git pull origin main
    git checkout -b feature/GIT-XXX_description

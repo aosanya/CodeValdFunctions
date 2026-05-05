@@ -4,13 +4,13 @@ package server
 import (
 	"errors"
 
-	codevaldgit "github.com/aosanya/CodeValdGit"
-	pb "github.com/aosanya/CodeValdGit/gen/go/codevaldgit/v1"
+	codevaldgit "github.com/aosanya/CodeValdFunctions"
+	pb "github.com/aosanya/CodeValdFunctions/gen/go/codevaldgit/v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
-// toGRPCError maps CodeValdGit domain errors to the appropriate gRPC status.
+// toGRPCError maps CodeValdFunctions domain errors to the appropriate gRPC status.
 // ErrMergeConflict is mapped to codes.Aborted with a MergeConflictInfo detail
 // message so clients can unpack the conflicting file list.
 // Unknown errors are wrapped as codes.Internal.

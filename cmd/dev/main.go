@@ -1,7 +1,7 @@
-// Command dev runs CodeValdGit locally against a local ArangoDB. Defaults
+// Command dev runs CodeValdFunctions locally against a local ArangoDB. Defaults
 // differ from production: listens on :50052, talks to http://localhost:8529,
 // and leaves CROSS_GRPC_ADDR empty so dev runs standalone (no Cross required).
-// The Makefile's `make dev` target sources CodeValdGit/.env before exec so
+// The Makefile's `make dev` target sources CodeValdFunctions/.env before exec so
 // real passwords stay out of the source tree.
 package main
 
@@ -9,8 +9,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/aosanya/CodeValdGit/internal/app"
-	"github.com/aosanya/CodeValdGit/internal/config"
+	"github.com/aosanya/CodeValdFunctions/internal/app"
+	"github.com/aosanya/CodeValdFunctions/internal/config"
 )
 
 func main() {

@@ -1,12 +1,12 @@
-# CodeValdGit — AI Agent Development Instructions
+# CodeValdFunctions — AI Agent Development Instructions
 
 ## Project Overview
 
-**CodeValdGit** is a **Go library** that provides Git-based artifact versioning for [CodeValdCortex](../CodeValdCortex/README.md) — the enterprise multi-agent AI orchestration platform.
+**CodeValdFunctions** is a **Go library** that provides Git-based artifact versioning for [CodeValdCortex](../CodeValdCortex/README.md) — the enterprise multi-agent AI orchestration platform.
 
 It replaces the hand-rolled Git engine (`internal/git/`) in CodeValdCortex with a proper Git implementation backed by [go-git](https://github.com/go-git/go-git). All Git semantics run in pure Go — no `git` binary dependency.
 
-**Core Concept**: Each Agency in CodeValdCortex has exactly **one Git repository**. AI agents produce artifacts (code, Markdown, configs, reports, any file type). CodeValdGit manages their storage, versioning, and lifecycle using real Git semantics — one task branch per task, auto-merged to `main` on completion.
+**Core Concept**: Each Agency in CodeValdCortex has exactly **one Git repository**. AI agents produce artifacts (code, Markdown, configs, reports, any file type). CodeValdFunctions manages their storage, versioning, and lifecycle using real Git semantics — one task branch per task, auto-merged to `main` on completion.
 
 ---
 
@@ -99,7 +99,7 @@ go-git separates storage into two injectable interfaces:
 | `git_index` | Staging area index |
 | `git_config` | Per-repo Git config |
 
-> The caller (CodeValdCortex) passes the chosen `storage.Storer` and `billy.Filesystem` when calling `InitRepo` / `OpenRepo`. **CodeValdGit itself is backend-agnostic.**
+> The caller (CodeValdCortex) passes the chosen `storage.Storer` and `billy.Filesystem` when calling `InitRepo` / `OpenRepo`. **CodeValdFunctions itself is backend-agnostic.**
 
 ### 5. Repository Archiving
 
@@ -112,7 +112,7 @@ go-git separates storage into two injectable interfaces:
 ## Project Structure
 
 ```
-/workspaces/CodeValdGit/
+/workspaces/CodeValdFunctions/
 ├── documentation/
 │   ├── README.md                          # Documentation index
 │   ├── 1-SoftwareRequirements/
@@ -265,9 +265,9 @@ git branch -d feature/GIT-XXX_description
 
 ## Integration with CodeValdCortex
 
-CodeValdCortex calls CodeValdGit at these lifecycle points:
+CodeValdCortex calls CodeValdFunctions at these lifecycle points:
 
-| CodeValdCortex Event | CodeValdGit Call |
+| CodeValdCortex Event | CodeValdFunctions Call |
 |---|---|
 | Agency created | `RepoManager.InitRepo(agencyID)` |
 | Task started | `Repo.CreateBranch(taskID)` |
@@ -282,7 +282,7 @@ CodeValdCortex calls CodeValdGit at these lifecycle points:
 
 ## What Gets Removed from CodeValdCortex
 
-Once CodeValdGit is integrated, the following will be deleted from CodeValdCortex:
+Once CodeValdFunctions is integrated, the following will be deleted from CodeValdCortex:
 
 - `internal/git/ops/operations.go` — custom SHA-1 blob/tree/commit engine
 - `internal/git/storage/repository.go` — ArangoDB Git object storage

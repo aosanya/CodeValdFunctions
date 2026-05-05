@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/aosanya/CodeValdGit/internal/gitgraph"
+	"github.com/aosanya/CodeValdFunctions/internal/gitgraph"
 	"github.com/aosanya/CodeValdSharedLib/entitygraph"
 )
 
@@ -16,7 +16,7 @@ import (
 // used exclusively by the gitgraph sync tests.
 type fakeDataManager struct {
 	mu            sync.Mutex
-	entities      map[string]entitygraph.Entity      // id → Entity
+	entities      map[string]entitygraph.Entity       // id → Entity
 	relationships map[string]entitygraph.Relationship // id → Relationship
 	nextEntityID  int
 	nextRelID     int

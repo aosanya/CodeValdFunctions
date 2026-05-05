@@ -1,4 +1,4 @@
-# CodeValdGit — Merge Strategy
+# CodeValdFunctions — Merge Strategy
 
 > Source: `review/review.md` (March 2026 design review)
 > Status: Defined — implementation tracked in `mvp.md` (GIT-012)

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	codevaldgit "github.com/aosanya/CodeValdGit"
+	codevaldgit "github.com/aosanya/CodeValdFunctions"
 )
 
 // ---------------------------------------------------------------------------

@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	codevaldgit "github.com/aosanya/CodeValdGit"
+	codevaldgit "github.com/aosanya/CodeValdFunctions"
 	"github.com/aosanya/CodeValdSharedLib/entitygraph"
 	"github.com/aosanya/CodeValdSharedLib/eventbus"
 	"github.com/aosanya/CodeValdSharedLib/types"

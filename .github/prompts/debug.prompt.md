@@ -2,11 +2,11 @@
 agent: agent
 ---
 
-# Debug a CodeValdGit Issue
+# Debug a CodeValdFunctions Issue
 
 ## How to Use This Prompt
 
-When you encounter a bug in CodeValdGit, describe the failing behaviour and use the guidelines below to add targeted debug logging, isolate the cause, and clean up before merging.
+When you encounter a bug in CodeValdFunctions, describe the failing behaviour and use the guidelines below to add targeted debug logging, isolate the cause, and clean up before merging.
 
 ## Common Failure Scenarios
 

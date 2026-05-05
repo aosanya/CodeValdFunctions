@@ -1,4 +1,4 @@
-// Package app holds the shared runtime wiring for CodeValdGit. Both the
+// Package app holds the shared runtime wiring for CodeValdFunctions. Both the
 // production binary (cmd/server) and the local dev binary (cmd/dev) call
 // Run; they differ only in which environment variables they set before
 // loading config.
@@ -18,19 +18,19 @@ import (
 	"github.com/soheilhy/cmux"
 	"google.golang.org/grpc"
 
-	codevaldgit "github.com/aosanya/CodeValdGit"
-	pb "github.com/aosanya/CodeValdGit/gen/go/codevaldgit/v1"
-	"github.com/aosanya/CodeValdGit/internal/config"
-	"github.com/aosanya/CodeValdGit/internal/registrar"
-	"github.com/aosanya/CodeValdGit/internal/server"
-	gitarangodb "github.com/aosanya/CodeValdGit/storage/arangodb"
+	codevaldgit "github.com/aosanya/CodeValdFunctions"
+	pb "github.com/aosanya/CodeValdFunctions/gen/go/codevaldgit/v1"
+	"github.com/aosanya/CodeValdFunctions/internal/config"
+	"github.com/aosanya/CodeValdFunctions/internal/registrar"
+	"github.com/aosanya/CodeValdFunctions/internal/server"
+	gitarangodb "github.com/aosanya/CodeValdFunctions/storage/arangodb"
 	"github.com/aosanya/CodeValdSharedLib/entitygraph"
 	healthpb "github.com/aosanya/CodeValdSharedLib/gen/go/codevaldhealth/v1"
 	"github.com/aosanya/CodeValdSharedLib/health"
 	"github.com/aosanya/CodeValdSharedLib/serverutil"
 )
 
-// Run starts all CodeValdGit subsystems (Cross registrar, ArangoDB backend,
+// Run starts all CodeValdFunctions subsystems (Cross registrar, ArangoDB backend,
 // gRPC + git Smart HTTP via cmux) and blocks until SIGINT/SIGTERM triggers
 // graceful shutdown.
 func Run(cfg config.Config) error {

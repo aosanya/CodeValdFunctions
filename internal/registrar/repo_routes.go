@@ -1,5 +1,5 @@
 // Package registrar — repo_routes.go
-// Repository lifecycle HTTP routes for CodeValdGit via CodeValdCross.
+// Repository lifecycle HTTP routes for CodeValdFunctions via CodeValdCross.
 package registrar
 
 import "github.com/aosanya/CodeValdSharedLib/types"

@@ -7,8 +7,8 @@ import (
 	"sync"
 	"testing"
 
-	codevaldgit "github.com/aosanya/CodeValdGit"
-	"github.com/aosanya/CodeValdGit/storage/filesystem"
+	codevaldgit "github.com/aosanya/CodeValdFunctions"
+	"github.com/aosanya/CodeValdFunctions/storage/filesystem"
 )
 
 // openTestRepo initialises a fresh repository in a temp directory and returns

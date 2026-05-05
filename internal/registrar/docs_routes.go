@@ -1,5 +1,5 @@
 // Package registrar — docs_routes.go
-// Knowledge-graph (keyword / edge / neighbourhood) HTTP routes for CodeValdGit
+// Knowledge-graph (keyword / edge / neighbourhood) HTTP routes for CodeValdFunctions
 // via CodeValdCross.
 package registrar
 

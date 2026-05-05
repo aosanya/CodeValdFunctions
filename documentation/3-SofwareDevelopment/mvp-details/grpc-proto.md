@@ -6,18 +6,18 @@ Topics: Proto Service Definition · Buf Toolchain · Error Proto
 
 ## Overview
 
-Define the canonical `.proto` file that describes the full CodeValdGit API
-surface. Generate Go server stubs (used by the CodeValdGit server in
+Define the canonical `.proto` file that describes the full CodeValdFunctions API
+surface. Generate Go server stubs (used by the CodeValdFunctions server in
 MVP-GIT-010) and Go client stubs (for any consumer to import).
 
 ### Why gRPC?
 
 | Concern | Go Module (original plan) | gRPC Microservice (new plan) |
 |---|---|---|
-| Deployment coupling | CodeValdGit runs inside CodeValdCross process | Independent process; independently scalable |
+| Deployment coupling | CodeValdFunctions runs inside CodeValdCross process | Independent process; independently scalable |
 | Language lock-in | Go only | Any gRPC client language |
-| Version upgrades | Full CodeValdCross rebuild | Re-deploy CodeValdGit service only |
-| Failure isolation | git failure crashes CodeValdCross | git failure isolated to CodeValdGit pod |
+| Version upgrades | Full CodeValdCross rebuild | Re-deploy CodeValdFunctions service only |
+| Failure isolation | git failure crashes CodeValdCross | git failure isolated to CodeValdFunctions pod |
 | Resource limits | Shares CodeValdCross CPU/memory | Separate pod limits for git-heavy workloads |
 | Contract enforcement | Go interfaces (compile-time) | Proto schema (cross-service boundary) |
 
@@ -107,11 +107,11 @@ syntax = "proto3";
 
 package codevaldgit.v1;
 
-option go_package = "github.com/aosanya/CodeValdGit/gen/go/codevaldgit/v1;codevaldgitv1";
+option go_package = "github.com/aosanya/CodeValdFunctions/gen/go/codevaldgit/v1;codevaldgitv1";
 
 import "google/protobuf/timestamp.proto";
 
-// RepoService is the single gRPC service exposed by CodeValdGit.
+// RepoService is the single gRPC service exposed by CodeValdFunctions.
 // All operations are stateless: agency_id is passed in every request.
 // Task branches are always "task/{task_id}" — the proto takes task_id only.
 service RepoService {
@@ -292,7 +292,7 @@ syntax = "proto3";
 
 package codevaldgit.v1;
 
-option go_package = "github.com/aosanya/CodeValdGit/gen/go/codevaldgit/v1;codevaldgitv1";
+option go_package = "github.com/aosanya/CodeValdFunctions/gen/go/codevaldgit/v1;codevaldgitv1";
 
 // MergeConflictInfo is packed into a google.rpc.Status detail field
 // when MergeBranch returns codes.Aborted due to a content conflict.

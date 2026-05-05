@@ -1,4 +1,4 @@
-// git.go defines the v2 flat [GitManager] interface for CodeValdGit.
+// git.go defines the v2 flat [GitManager] interface for CodeValdFunctions.
 //
 // The v2 design replaces the nested Backend/RepoManager/Repo hierarchy with a
 // single Agency/AI-aligned interface. Each [GitManager] instance is scoped to

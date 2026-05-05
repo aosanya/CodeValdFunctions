@@ -12,7 +12,7 @@
 //   - All edges                → "git_relationships" edge collection
 package codevaldgit
 
-// Agency is the root entity for an agency in CodeValdGit.
+// Agency is the root entity for an agency in CodeValdFunctions.
 // Each agency may own one or more [Repository] entities linked via
 // has_repository edges in the entity graph.
 type Agency struct {

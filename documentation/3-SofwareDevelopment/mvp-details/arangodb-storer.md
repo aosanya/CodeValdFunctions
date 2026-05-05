@@ -16,7 +16,7 @@
 
 ## Problem Statement
 
-CodeValdGit has two incompatible storage layers:
+CodeValdFunctions has two incompatible storage layers:
 
 - **gRPC path**: `gitManager` → `entitygraph.DataManager` → ArangoDB. Stores high-level
   entities (Repository, Branch, Blob) with UUID keys and JSON properties.
@@ -151,7 +151,7 @@ type arangoBackend struct {
 # 1. Start ArangoDB
 docker run -p 8529:8529 -e ARANGO_NO_AUTH=1 arangodb:3.11
 
-# 2. Start CodeValdGit
+# 2. Start CodeValdFunctions
 GIT_ARANGO_ENDPOINT=http://localhost:8529 \
 CODEVALDGIT_AGENCY_ID=test-agency \
 ./bin/codevaldgit-server

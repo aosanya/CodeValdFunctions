@@ -2,7 +2,7 @@
 
 ## Overview
 
-This section tracks the development plan, MVP task breakdown, and implementation details for CodeValdGit.
+This section tracks the development plan, MVP task breakdown, and implementation details for CodeValdFunctions.
 
 ---
 

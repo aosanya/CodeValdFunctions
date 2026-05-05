@@ -1,8 +1,8 @@
-// Package arangodb implements the ArangoDB backend for CodeValdGit.
+// Package arangodb implements the ArangoDB backend for CodeValdFunctions.
 // All implementation logic lives in
 // [github.com/aosanya/CodeValdSharedLib/entitygraph/arangodb]; this package
 // is a thin service-scoped adapter that fixes the collection and graph names
-// to their CodeValdGit-specific values.
+// to their CodeValdFunctions-specific values.
 //
 // Entity collections:
 //   - git_entities  — mutable refs: Agency, Repository, Branch, Tag
@@ -26,7 +26,7 @@ import (
 
 	driver "github.com/arangodb/go-driver"
 
-	codevaldgit "github.com/aosanya/CodeValdGit"
+	codevaldgit "github.com/aosanya/CodeValdFunctions"
 	"github.com/aosanya/CodeValdSharedLib/arangoutil"
 	"github.com/aosanya/CodeValdSharedLib/entitygraph"
 	sharedadb "github.com/aosanya/CodeValdSharedLib/entitygraph/arangodb"
@@ -37,13 +37,13 @@ import (
 // Callers holding *Backend references continue to compile unchanged.
 type Backend = sharedadb.Backend
 
-// Config is the connection parameters for the CodeValdGit ArangoDB backend.
+// Config is the connection parameters for the CodeValdFunctions ArangoDB backend.
 // It is an alias of [sharedadb.ConnConfig]; see that type for field docs.
 // NewBackend requires Database to be set (e.g. "codevaldgit").
 type Config = sharedadb.ConnConfig
 
-// toSharedConfig expands a CodeValdGit Config into a full SharedLib Config,
-// filling in the fixed CodeValdGit-specific collection and graph names.
+// toSharedConfig expands a CodeValdFunctions Config into a full SharedLib Config,
+// filling in the fixed CodeValdFunctions-specific collection and graph names.
 // Does not check whether Database is set — that check belongs in NewBackend,
 // which dials the server. New and NewBackendFromDB receive an already-open
 // database and do not use the Database field.

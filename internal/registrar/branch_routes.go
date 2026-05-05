@@ -1,5 +1,5 @@
 // Package registrar — branch_routes.go
-// Branch CRUD and merge HTTP routes for CodeValdGit via CodeValdCross.
+// Branch CRUD and merge HTTP routes for CodeValdFunctions via CodeValdCross.
 package registrar
 
 import "github.com/aosanya/CodeValdSharedLib/types"

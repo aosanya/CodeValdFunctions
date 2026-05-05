@@ -1,4 +1,4 @@
-# CodeValdGit — Architecture
+# CodeValdFunctions — Architecture
 
 ## 1. Core Design Decisions
 
@@ -29,9 +29,9 @@ go-git separates storage into two injectable interfaces:
 | `storage.Storer` | `github.com/go-git/go-git/v5/storage` | Git objects, refs, index, config |
 | `billy.Filesystem` | `github.com/go-git/go-billy/v5` | Working tree (checked-out files) |
 
-### CodeValdGit `Backend` Interface
+### CodeValdFunctions `Backend` Interface
 
-CodeValdGit adds a thin `Backend` interface on top of `storage.Storer`. It captures the operations that differ per storage type — repo lifecycle (init, archive/flag, purge) and storer construction — while the shared `Repo` implementation (branches, files, history) sits in `internal/repo/` and is backend-agnostic.
+CodeValdFunctions adds a thin `Backend` interface on top of `storage.Storer`. It captures the operations that differ per storage type — repo lifecycle (init, archive/flag, purge) and storer construction — while the shared `Repo` implementation (branches, files, history) sits in `internal/repo/` and is backend-agnostic.
 
 ```go
 // Backend abstracts storage-specific repo lifecycle.
@@ -94,12 +94,12 @@ Key properties:
 - **Immutable objects** — Commit, Tree, and Blob entities in `git_objects` are content-addressed and never mutated after creation.
 - **Schema-driven** — `DefaultGitSchema()` in `schema.go` is seeded into the entity graph on startup via `entitygraph.SchemaManager`.
 
-The `storage/arangodb` package in CodeValdGit is a **thin adapter** — it supplies CodeValdGit-specific collection names and graph names to the shared `entitygraph.NewArangoDataManager` from SharedLib.
+The `storage/arangodb` package in CodeValdFunctions is a **thin adapter** — it supplies CodeValdFunctions-specific collection names and graph names to the shared `entitygraph.NewArangoDataManager` from SharedLib.
 
 ### Package Layout
 
 ```
-github.com/aosanya/CodeValdGit/
+github.com/aosanya/CodeValdFunctions/
 │
 │  ── v2 gRPC service API (current) ─────────────────────────────────────────
 ├── git.go                  # GitManager interface + CrossPublisher + NewGitManager
@@ -257,7 +257,7 @@ func NewGitManager(
 
 The v1 three-interface hierarchy (`codevaldgit.go`, `manager.go`, `repo.go`) remains
 in the codebase for the filesystem backend and any library consumers that embed
-CodeValdGit directly. It is **not** used by the gRPC server — the server delegates
+CodeValdFunctions directly. It is **not** used by the gRPC server — the server delegates
 to `GitManager` (v2) exclusively.
 
 See [architecture-arangodb.md](architecture-arangodb.md) for the full v1 → v2 evolution rationale.
@@ -267,7 +267,7 @@ See [architecture-arangodb.md](architecture-arangodb.md) for the full v1 → v2 
 ## 6. Integration via CodeValdCross
 
 External callers (CodeValdHi, CodeValdAI, and future consumers) never call
-CodeValdGit directly. All traffic flows through the CodeValdCross HTTP
+CodeValdFunctions directly. All traffic flows through the CodeValdCross HTTP
 management proxy:
 
 ```
@@ -280,7 +280,7 @@ Caller → POST /{agencyId}/repositories   (HTTP, Cross port 8080)
       → 200 OK (JSON)
 ```
 
-CodeValdGit declares all its HTTP routes in its `RegisterRequest` heartbeat.
+CodeValdFunctions declares all its HTTP routes in its `RegisterRequest` heartbeat.
 Adding a new endpoint requires **zero changes to CodeValdCross**.
 
 ### GitService gRPC endpoints (declared in `RegisterRequest.routes`)
@@ -301,9 +301,9 @@ Adding a new endpoint requires **zero changes to CodeValdCross**.
 | `GET` | `/{agencyId}/branches/{branchId}/log` | `Log` | Commit history |
 | `GET` | `/{agencyId}/diff` | `Diff` | File diff between two refs |
 
-### Pub/sub events published by CodeValdGit
+### Pub/sub events published by CodeValdFunctions
 
-After each successful mutating operation CodeValdGit publishes a typed event
+After each successful mutating operation CodeValdFunctions publishes a typed event
 to CodeValdCross via its `CrossPublisher`:
 
 | Event | Topic | Trigger |
@@ -317,9 +317,9 @@ to CodeValdCross via its `CrossPublisher`:
 
 ## 7. CodeValdSharedLib Dependency
 
-CodeValdGit imports `github.com/aosanya/CodeValdSharedLib` for:
+CodeValdFunctions imports `github.com/aosanya/CodeValdSharedLib` for:
 
-| SharedLib package | What CodeValdGit uses it for |
+| SharedLib package | What CodeValdFunctions uses it for |
 |---|---|
 | `entitygraph` | `DataManager` and `SchemaManager` interfaces — the v2 storage layer; `git_entities`, `git_objects`, and `git_relationships` (edge) are managed through these interfaces |
 | `registrar` | Generic Cross heartbeat registrar — sends `Register` RPC to Cross every 20 s; all service-specific metadata (service name, topics, routes) is passed as constructor args |
@@ -329,7 +329,7 @@ CodeValdGit imports `github.com/aosanya/CodeValdSharedLib` for:
 | `types` | `PathBinding`, `RouteInfo`, `ServiceRegistration` — shared with Cross; used when constructing the `RegisterRequest` routes slice |
 
 > **Principle**: Any infrastructure code used by more than one service lives in
-> SharedLib. CodeValdGit retains only its domain logic (`GitManager`), domain
+> SharedLib. CodeValdFunctions retains only its domain logic (`GitManager`), domain
 > errors (`errors.go`), gRPC handlers (`internal/server/`), and storage
 > schema (`schema.go`).
 
@@ -337,7 +337,7 @@ CodeValdGit imports `github.com/aosanya/CodeValdSharedLib` for:
 
 ## 8. Integration Test Gate
 
-CodeValdGit is the authoritative Git service for the platform. The integration
+CodeValdFunctions is the authoritative Git service for the platform. The integration
 test suite (CROSS-IT-001 through CROSS-IT-004) validates the full call path:
 
 ```
@@ -351,7 +351,7 @@ for the full test specification.
 
 ## 9. Git Smart HTTP Transport Libraries
 
-CodeValdGit serves the [Git Smart HTTP protocol](https://git-scm.com/docs/http-protocol)
+CodeValdFunctions serves the [Git Smart HTTP protocol](https://git-scm.com/docs/http-protocol)
 alongside its gRPC service so that standard `git clone`, `git fetch`, and `git push`
 clients can interact with agency repositories directly.
 This section documents every go-git sub-package and the `cmux` multiplexer used
@@ -435,7 +435,7 @@ type Loader interface {
 }
 ```
 
-CodeValdGit provides a custom `backendLoader` that maps `ep.Path` → agencyID and
+CodeValdFunctions provides a custom `backendLoader` that maps `ep.Path` → agencyID and
 calls `Backend.OpenStorer(ctx, agencyID)`:
 
 ```go
@@ -458,7 +458,7 @@ func (l *backendLoader) Load(ep *transport.Endpoint) (storer.Storer, error) {
 | `NewFilesystemLoader(base billy.Filesystem)` | Resolves `ep.Path` as a sub-path under `base`; best for single-backend setups |
 | `MapLoader` (`map[string]storer.Storer`) | Directly maps endpoint string → storer; useful for tests |
 
-CodeValdGit uses the custom `backendLoader` so that the filesystem `Backend` handles
+CodeValdFunctions uses the custom `backendLoader` so that the filesystem `Backend` handles
 path resolution consistently with the rest of the codebase.
 
 #### `NewServer`

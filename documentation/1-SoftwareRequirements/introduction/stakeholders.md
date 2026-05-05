@@ -2,17 +2,17 @@
 
 ## Primary Consumer
 
-| Stakeholder | Role | How They Use CodeValdGit |
+| Stakeholder | Role | How They Use CodeValdFunctions |
 |---|---|---|
-| **CodeValdCross** | Primary and only consumer | Imports `github.com/aosanya/CodeValdGit` as a Go module; calls `RepoManager` and `Repo` at Agency and Task lifecycle points |
+| **CodeValdCross** | Primary and only consumer | Imports `github.com/aosanya/CodeValdFunctions` as a Go module; calls `RepoManager` and `Repo` at Agency and Task lifecycle points |
 
 ---
 
 ## CodeValdCross Integration Points
 
-CodeValdCross calls CodeValdGit at these lifecycle events:
+CodeValdCross calls CodeValdFunctions at these lifecycle events:
 
-| Event | CodeValdGit Call |
+| Event | CodeValdFunctions Call |
 |---|---|
 | Agency created | `RepoManager.InitRepo(agencyID)` |
 | Agency deleted | `RepoManager.DeleteRepo(agencyID)` |
@@ -37,7 +37,7 @@ CodeValdCross calls CodeValdGit at these lifecycle events:
 
 ## Library Maintainers
 
-The library is maintained as part of the **CodeVald** platform (CodeValdCross, CodeValdGit, CodeValdWork). Development follows:
+The library is maintained as part of the **CodeVald** platform (CodeValdCross, CodeValdFunctions, CodeValdWork). Development follows:
 - Trunk-based development with short-lived feature branches (`feature/GIT-XXX_description`)
 - Pure Go — no `git` binary dependency
 - go-git v5 as the sole Git engine dependency

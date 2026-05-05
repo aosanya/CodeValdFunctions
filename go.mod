@@ -1,4 +1,4 @@
-module github.com/aosanya/CodeValdGit
+module github.com/aosanya/CodeValdFunctions
 
 go 1.25.3
 

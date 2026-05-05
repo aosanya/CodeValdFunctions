@@ -1,5 +1,5 @@
 // Package registrar — history_routes.go
-// Commit log and diff HTTP routes for CodeValdGit via CodeValdCross.
+// Commit log and diff HTTP routes for CodeValdFunctions via CodeValdCross.
 package registrar
 
 import "github.com/aosanya/CodeValdSharedLib/types"

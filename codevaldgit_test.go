@@ -9,7 +9,7 @@ import (
 	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-git/v5/storage"
 
-	codevaldgit "github.com/aosanya/CodeValdGit"
+	codevaldgit "github.com/aosanya/CodeValdFunctions"
 )
 
 // ---------------------------------------------------------------------------

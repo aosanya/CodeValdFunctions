@@ -20,7 +20,7 @@ Topics: Import · Clone · Async Job · Public HTTPS
 ## Overview
 
 `ImportRepo` ingests an existing external Git repository (e.g.
-`https://github.com/aosanya/CodeValdGit`) into CodeValdGit, representing it
+`https://github.com/aosanya/CodeValdFunctions`) into CodeValdFunctions, representing it
 fully in the entity graph. It is a **separate method** on `GitManager` — not
 a variant of `InitRepo`.
 
@@ -75,7 +75,7 @@ type ImportRepoRequest struct {
     Description string
     // SourceURL is the public HTTPS URL of the remote Git repository to clone.
     // Private repositories are not supported in v1 — no credentials are accepted.
-    // Example: "https://github.com/aosanya/CodeValdGit"
+    // Example: "https://github.com/aosanya/CodeValdFunctions"
     SourceURL string
     // DefaultBranch is the name of the branch to mark as the repository default.
     // If empty, defaults to "main".

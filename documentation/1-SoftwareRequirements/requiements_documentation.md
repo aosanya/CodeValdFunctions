@@ -1,8 +1,8 @@
-# CodeValdGit — Documentation Layer Requirements
+# CodeValdFunctions — Documentation Layer Requirements
 
 ## 1. Purpose
 
-Introduce a **documentation layer** to CodeValdGit that enables keyword-based
+Introduce a **documentation layer** to CodeValdFunctions that enables keyword-based
 discovery across Git objects (Blobs, Branches, Commits). AI agents can query
 the graph by keyword and receive all related files — documentation and code
 alike — to build rich working context for tasks.
@@ -33,7 +33,7 @@ agent receives a task, it queries "give me all files related to keyword X"
 and receives a set of Blobs (both documentation markdown and code files),
 Branches, and Commits.
 
-Human users (via CodeValdHi / CodeValdGitFrontend) are a secondary
+Human users (via CodeValdHi / CodeValdFunctionsFrontend) are a secondary
 beneficiary. API should prioritise bulk retrieval and machine-readable
 responses.
 

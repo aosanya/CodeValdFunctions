@@ -1,7 +1,7 @@
 // Package codevaldgit — pre-delivered schema definition.
 //
 // This file exposes [DefaultGitSchema], which returns the fixed [types.Schema]
-// for CodeValdGit. cmd/main.go seeds this schema idempotently on startup via
+// for CodeValdFunctions. cmd/main.go seeds this schema idempotently on startup via
 // GitSchemaManager.SetSchema.
 //
 // The schema declares nine TypeDefinitions:

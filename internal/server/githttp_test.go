@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	filesystem "github.com/aosanya/CodeValdGit/storage/filesystem"
+	filesystem "github.com/aosanya/CodeValdFunctions/storage/filesystem"
 
-	"github.com/aosanya/CodeValdGit/internal/server"
+	"github.com/aosanya/CodeValdFunctions/internal/server"
 )
 
 // newTestHandler creates a GitHTTPHandler backed by a temp filesystem backend

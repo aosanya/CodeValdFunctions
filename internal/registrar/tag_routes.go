@@ -1,5 +1,5 @@
 // Package registrar — tag_routes.go
-// Tag CRUD HTTP routes for CodeValdGit via CodeValdCross.
+// Tag CRUD HTTP routes for CodeValdFunctions via CodeValdCross.
 package registrar
 
 import "github.com/aosanya/CodeValdSharedLib/types"

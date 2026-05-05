@@ -1,5 +1,5 @@
 // Package registrar — file_routes.go
-// File read/write HTTP routes for CodeValdGit via CodeValdCross.
+// File read/write HTTP routes for CodeValdFunctions via CodeValdCross.
 package registrar
 
 import "github.com/aosanya/CodeValdSharedLib/types"

@@ -1,10 +1,10 @@
-# CodeValdGit — Requirements
+# CodeValdFunctions — Requirements
 
 ## 1. Purpose
 
-CodeValdGit is a **Go gRPC microservice** that provides Git-based artifact versioning for the CodeVald platform.
+CodeValdFunctions is a **Go gRPC microservice** that provides Git-based artifact versioning for the CodeVald platform.
 
-AI agents produce artifacts (code, Markdown, configs, reports, and any other file type). CodeValdGit manages the storage, versioning, and lifecycle of those artifacts using real Git semantics via [go-git](https://github.com/go-git/go-git).
+AI agents produce artifacts (code, Markdown, configs, reports, and any other file type). CodeValdFunctions manages the storage, versioning, and lifecycle of those artifacts using real Git semantics via [go-git](https://github.com/go-git/go-git).
 
 ---
 
@@ -16,7 +16,7 @@ AI agents produce artifacts (code, Markdown, configs, reports, and any other fil
 - Branch-per-task workflow (create, commit, auto-merge)
 - Repo archiving on Agency deletion (move to archive path, not hard-deleted)
 - Read access to historical commits: file content at any SHA, file history, and diffs (for CodeValdHi UI)
-- Exposed as a Go library (`import "github.com/aosanya/CodeValdGit"`)
+- Exposed as a Go library (`import "github.com/aosanya/CodeValdFunctions"`)
 
 ### Out of Scope
 - Remote Git hosting (no GitHub/GitLab push/pull — local repos only, for now)
@@ -27,7 +27,7 @@ AI agents produce artifacts (code, Markdown, configs, reports, and any other fil
 
 ## 3. Replaces
 
-CodeValdGit **fully replaces** the legacy `internal/git/` hand-rolled Git engine:
+CodeValdFunctions **fully replaces** the legacy `internal/git/` hand-rolled Git engine:
 
 | Replaced package | Reason for replacement |
 |---|---|

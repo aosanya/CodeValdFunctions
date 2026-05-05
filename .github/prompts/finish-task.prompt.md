@@ -4,7 +4,7 @@ agent: agent
 
 # Complete and Merge Current Task
 
-Follow the **mandatory completion process** for CodeValdGit tasks:
+Follow the **mandatory completion process** for CodeValdFunctions tasks:
 
 ## Completion Process (MANDATORY)
 

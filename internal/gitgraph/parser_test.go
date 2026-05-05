@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/aosanya/CodeValdGit/internal/gitgraph"
+	"github.com/aosanya/CodeValdFunctions/internal/gitgraph"
 )
 
 // ── ParseSignalVocab ──────────────────────────────────────────────────────────

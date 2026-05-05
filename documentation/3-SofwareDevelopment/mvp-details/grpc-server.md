@@ -6,7 +6,7 @@ Topics: gRPC Server · Error Mapping · Dockerfile · Health Check · Graceful S
 
 ## Overview
 
-Add a gRPC server entrypoint to CodeValdGit so it can run as a standalone
+Add a gRPC server entrypoint to CodeValdFunctions so it can run as a standalone
 service. The server wraps the existing `RepoManager` and `Repo` interfaces in
 generated gRPC handler implementations, maps Go errors to gRPC status codes,
 and exposes the standard gRPC health protocol.
@@ -71,8 +71,8 @@ import (
     "google.golang.org/grpc/codes"
     "google.golang.org/grpc/status"
 
-    codevaldgit "github.com/aosanya/CodeValdGit"
-    pb "github.com/aosanya/CodeValdGit/gen/go/codevaldgit/v1"
+    codevaldgit "github.com/aosanya/CodeValdFunctions"
+    pb "github.com/aosanya/CodeValdFunctions/gen/go/codevaldgit/v1"
 )
 
 type Server struct {
@@ -120,8 +120,8 @@ import (
     "google.golang.org/grpc/status"
     "google.golang.org/protobuf/types/known/anypb"
 
-    codevaldgit "github.com/aosanya/CodeValdGit"
-    pb "github.com/aosanya/CodeValdGit/gen/go/codevaldgit/v1"
+    codevaldgit "github.com/aosanya/CodeValdFunctions"
+    pb "github.com/aosanya/CodeValdFunctions/gen/go/codevaldgit/v1"
 )
 
 func mapError(err error) error {

@@ -1,5 +1,5 @@
 // Package registrar — fetch_branch_routes.go
-// FetchBranch async history routes for CodeValdGit via CodeValdCross.
+// FetchBranch async history routes for CodeValdFunctions via CodeValdCross.
 package registrar
 
 import "github.com/aosanya/CodeValdSharedLib/types"

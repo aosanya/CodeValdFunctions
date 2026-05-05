@@ -1,6 +1,6 @@
 package codevaldgit
 
-// Event topic constants — the closed set CodeValdGit publishes.
+// Event topic constants — the closed set CodeValdFunctions publishes.
 const (
 	// TopicRepoCreated fires after a Repository entity is created by InitRepo.
 	// Payload: [RepoCreatedPayload].

@@ -90,7 +90,7 @@ type ImportRepoRequest struct {
 
 	// SourceURL is the public HTTPS URL of the remote Git repository to clone.
 	// Private repositories are not supported in v1 — no credentials are accepted.
-	// Example: "https://github.com/aosanya/CodeValdGit"
+	// Example: "https://github.com/aosanya/CodeValdFunctions"
 	SourceURL string
 
 	// DefaultBranch is the name of the branch to mark as the repository default.

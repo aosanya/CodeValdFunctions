@@ -8,8 +8,8 @@ import (
 	"sync"
 	"testing"
 
-	codevaldgit "github.com/aosanya/CodeValdGit"
-	"github.com/aosanya/CodeValdGit/storage/filesystem"
+	codevaldgit "github.com/aosanya/CodeValdFunctions"
+	"github.com/aosanya/CodeValdFunctions/storage/filesystem"
 )
 
 // newTestBackend creates a filesystemBackend backed by two temp directories

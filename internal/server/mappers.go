@@ -4,8 +4,8 @@ package server
 import (
 	"time"
 
-	codevaldgit "github.com/aosanya/CodeValdGit"
-	pb "github.com/aosanya/CodeValdGit/gen/go/codevaldgit/v1"
+	codevaldgit "github.com/aosanya/CodeValdFunctions"
+	pb "github.com/aosanya/CodeValdFunctions/gen/go/codevaldgit/v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

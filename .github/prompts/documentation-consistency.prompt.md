@@ -28,7 +28,7 @@ The goal is to systematically check documentation consistency one area at a time
 ```yaml
 Library:
   Language: Go 1.21+
-  Module: github.com/aosanya/CodeValdGit
+  Module: github.com/aosanya/CodeValdFunctions
   Git engine: go-git (pure Go, no git binary)
   Storage (default): Filesystem via osfs (billy.Filesystem)
   Storage (optional): ArangoDB via custom storage.Storer (storage/arangodb/)

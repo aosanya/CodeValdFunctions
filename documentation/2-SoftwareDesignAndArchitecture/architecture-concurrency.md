@@ -1,4 +1,4 @@
-# CodeValdGit — Concurrency and Atomic Ref Updates
+# CodeValdFunctions — Concurrency and Atomic Ref Updates
 
 > Source: `review/review.md` (March 2026 design review)
 > Status: Defined — implementation tracked in `mvp.md` (GIT-011)

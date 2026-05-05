@@ -2,7 +2,7 @@
 
 ## Overview
 
-This section captures the **how** — design decisions, data models, component architecture, and technical constraints for CodeValdGit.
+This section captures the **how** — design decisions, data models, component architecture, and technical constraints for CodeValdFunctions.
 
 ---
 
@@ -41,7 +41,7 @@ This section captures the **how** — design decisions, data models, component a
 ## Component Architecture
 
 ```
-github.com/aosanya/CodeValdGit    ← root package (library entry point)
+github.com/aosanya/CodeValdFunctions    ← root package (library entry point)
 ├── git.go                        # GitManager interface + CrossPublisher
 ├── codevaldgit.go                # Backend, RepoManager, Repo interfaces
 ├── errors.go                     # Exported error types (ErrMergeConflict, etc.)

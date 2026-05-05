@@ -27,7 +27,7 @@ import (
 
 	gogitstorage "github.com/go-git/go-git/v5/storage"
 
-	codevaldgit "github.com/aosanya/CodeValdGit"
+	codevaldgit "github.com/aosanya/CodeValdFunctions"
 )
 
 // FilesystemConfig holds path settings for the filesystem backend.

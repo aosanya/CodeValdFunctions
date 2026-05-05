@@ -5,7 +5,7 @@ import (
 	"context"
 	"testing"
 
-	codevaldgit "github.com/aosanya/CodeValdGit"
+	codevaldgit "github.com/aosanya/CodeValdFunctions"
 	"github.com/aosanya/CodeValdSharedLib/entitygraph"
 )
 

@@ -2,11 +2,11 @@
 applyTo: '**'
 ---
 
-# CodeValdGit — Code Structure Rules
+# CodeValdFunctions — Code Structure Rules
 
 ## Library Design Principles
 
-CodeValdGit is a **Go library** — not an application. These rules reflect that:
+CodeValdFunctions is a **Go library** — not an application. These rules reflect that:
 
 - **No HTTP handlers, no web framework, no templating engine**
 - **No `main` package** — the root package is the library entry point

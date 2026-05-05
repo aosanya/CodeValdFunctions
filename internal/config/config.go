@@ -1,4 +1,4 @@
-// Package config loads CodeValdGit runtime configuration from environment
+// Package config loads CodeValdFunctions runtime configuration from environment
 // variables. All values have sensible defaults so the service starts in
 // standalone mode (no Cross registration, in-memory ArangoDB worktree) with
 // zero environment variables set.
@@ -10,7 +10,7 @@ import (
 	"github.com/aosanya/CodeValdSharedLib/serverutil"
 )
 
-// Config holds all runtime configuration for the CodeValdGit service.
+// Config holds all runtime configuration for the CodeValdFunctions service.
 type Config struct {
 	// ListenAddr is the host:port the combined gRPC + git Smart HTTP server
 	// listens on. Controlled by GIT_GRPC_LISTEN_ADDR; falls back to

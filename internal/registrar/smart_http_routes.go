@@ -1,5 +1,5 @@
 // Package registrar — smart_http_routes.go
-// Git Smart HTTP protocol routes for CodeValdGit via CodeValdCross.
+// Git Smart HTTP protocol routes for CodeValdFunctions via CodeValdCross.
 package registrar
 
 import "github.com/aosanya/CodeValdSharedLib/types"

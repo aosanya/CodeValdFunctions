@@ -2,7 +2,7 @@
 
 ## Overview
 
-This section covers testing strategy, acceptance criteria, and quality assurance for CodeValdGit.
+This section covers testing strategy, acceptance criteria, and quality assurance for CodeValdFunctions.
 
 ---
 

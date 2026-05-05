@@ -9,7 +9,7 @@
 
 ## Problem Solved
 
-CodeValdGit had two incompatible storage layers:
+CodeValdFunctions had two incompatible storage layers:
 
 - **gRPC path** (`gitManager`): wrote Blob/Tree/Commit/Branch entities via `entitygraph.DataManager` → ArangoDB.
 - **Smart HTTP path** (`GitHTTPHandler`): used a filesystem `Backend` expecting a `.git/` directory on disk.

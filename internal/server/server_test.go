@@ -11,9 +11,9 @@ import (
 	"net"
 	"testing"
 
-	codevaldgit "github.com/aosanya/CodeValdGit"
-	pb "github.com/aosanya/CodeValdGit/gen/go/codevaldgit/v1"
-	"github.com/aosanya/CodeValdGit/internal/server"
+	codevaldgit "github.com/aosanya/CodeValdFunctions"
+	pb "github.com/aosanya/CodeValdFunctions/gen/go/codevaldgit/v1"
+	"github.com/aosanya/CodeValdFunctions/internal/server"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"

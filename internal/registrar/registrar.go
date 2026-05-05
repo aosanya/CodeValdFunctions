@@ -1,4 +1,4 @@
-// Package registrar provides the CodeValdGit service registrar.
+// Package registrar provides the CodeValdFunctions service registrar.
 // It wraps the shared-library heartbeat registrar and additionally implements
 // [codevaldgit.CrossPublisher] so the [GitManager] can notify
 // CodeValdCross whenever a git lifecycle event occurs (repo created, branch
@@ -10,7 +10,7 @@ import (
 	"log"
 	"time"
 
-	codevaldgit "github.com/aosanya/CodeValdGit"
+	codevaldgit "github.com/aosanya/CodeValdFunctions"
 	"github.com/aosanya/CodeValdSharedLib/eventbus"
 	sharedregistrar "github.com/aosanya/CodeValdSharedLib/registrar"
 	"github.com/aosanya/CodeValdSharedLib/types"
@@ -85,7 +85,7 @@ func (r *Registrar) Publish(_ context.Context, e eventbus.Event) error {
 	return nil
 }
 
-// gitRoutes returns all HTTP routes that CodeValdGit exposes via Cross.
+// gitRoutes returns all HTTP routes that CodeValdFunctions exposes via Cross.
 // See routes.go for the per-concern helper functions.
 func gitRoutes() []types.RouteInfo {
 	var all []types.RouteInfo
