@@ -1,0 +1,18 @@
+# Binaries
+/bin/
+/main
+codevaldgit
+
+# Environment — never commit real credentials
+.env
+
+# Go test cache & coverage
+*.out
+coverage.html
+
+# OS
+.DS_Store
+integration-test.log
+
+.claude/*
+.claude
