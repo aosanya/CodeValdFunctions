@@ -28,6 +28,7 @@ func Run(cfg config.Config) error {
 	defer cancel()
 
 	// ── Cross registrar (optional) ───────────────────────────────────────────
+	var pub codevaldelfunctions.CrossPublisher
 	if cfg.CrossGRPCAddr != "" {
 		reg, err := registrar.New(
 			cfg.CrossGRPCAddr,
@@ -41,6 +42,7 @@ func Run(cfg config.Config) error {
 		} else {
 			defer reg.Close()
 			go reg.Run(ctx)
+			pub = reg
 		}
 	} else {
 		log.Println("codevaldelfunctions: CROSS_GRPC_ADDR not set — skipping CodeValdCross registration")
@@ -69,13 +71,15 @@ func Run(cfg config.Config) error {
 		log.Println("codevaldelfunctions: CODEVALDELFUNCTIONS_AGENCY_ID not set — skipping schema seed")
 	}
 
+	mgr := codevaldelfunctions.NewFunctionsManager(backend, pub, cfg.AgencyID)
+
 	lis, err := net.Listen("tcp", ":"+cfg.GRPCPort)
 	if err != nil {
 		return err
 	}
 
 	grpcServer, _ := serverutil.NewGRPCServer()
-	pb.RegisterFunctionsServiceServer(grpcServer, server.New())
+	pb.RegisterFunctionsServiceServer(grpcServer, server.New(mgr))
 	healthpb.RegisterHealthServiceServer(grpcServer, health.New("codevaldelfunctions"))
 
 	quit := make(chan os.Signal, 1)

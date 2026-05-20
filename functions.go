@@ -3,9 +3,27 @@ package codevaldelfunctions
 import "context"
 
 // FunctionsManager is the top-level interface for the CodeValdFunctions domain.
-// Job lifecycle methods are added in MVP-FN-003.
-// Event dispatch is wired in MVP-FN-004 and MVP-FN-005.
+// It manages Job entities and their lifecycle transitions.
 type FunctionsManager interface {
-	// Ping verifies the manager is healthy. Used by the gRPC health service.
-	Ping(ctx context.Context) error
+	// CreateJob creates a new Job in the pending state.
+	CreateJob(ctx context.Context, agencyID, functionName, triggerEvent, payload string) (Job, error)
+
+	// GetJob retrieves a single Job by ID.
+	GetJob(ctx context.Context, agencyID, jobID string) (Job, error)
+
+	// StartJob transitions a Job from pending or retrying → running,
+	// recording started_at.
+	StartJob(ctx context.Context, agencyID, jobID string) (Job, error)
+
+	// CompleteJob transitions a running Job → completed, recording the result
+	// and completed_at.
+	CompleteJob(ctx context.Context, agencyID, jobID, result string) (Job, error)
+
+	// FailJob transitions a running Job → failed or retrying depending on the
+	// current retry_count vs the per-manager max retries.
+	FailJob(ctx context.Context, agencyID, jobID, errMsg string) (Job, error)
+
+	// CancelJob transitions a pending or running Job → cancelled.
+	// Returns ErrInvalidJobTransition for jobs in any other state.
+	CancelJob(ctx context.Context, agencyID, jobID string) (Job, error)
 }
