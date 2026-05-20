@@ -47,6 +47,9 @@ func DefaultFunctionsSchema() types.Schema {
 					{Name: "trigger_event", Type: types.PropertyTypeString, Required: true},
 					// trigger_payload is the JSON-encoded event payload received from Cross.
 					{Name: "trigger_payload", Type: types.PropertyTypeString},
+					// task_id is the platform task ID extracted from the trigger payload,
+					// used to correlate Jobs with CodeValdWork tasks.
+					{Name: "task_id", Type: types.PropertyTypeString},
 					// result is the JSON-encoded function output on successful completion.
 					{Name: "result", Type: types.PropertyTypeString},
 					// error is the error message when the job reaches a failed state.

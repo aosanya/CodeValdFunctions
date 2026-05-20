@@ -59,7 +59,22 @@ message CancelJobResponse {
   Job job = 1;
 }
 
-// FunctionsService exposes job management for CodeValdFunctions.
+// ── DeployFunction ────────────────────────────────────────────────────────────
+
+message DeployFunctionRequest {
+  string agency_id    = 1;
+  string name         = 2; // function name, e.g. "compile-flutter"
+  string trigger      = 3; // trigger event, e.g. "work.task.completed"
+  bytes  binary       = 4; // executable content (script, compiled binary, etc.)
+  string description  = 5; // optional human-readable description
+}
+
+message DeployFunctionResponse {
+  string name = 1;
+  string path = 2; // path where the binary was written on the server
+}
+
+// FunctionsService exposes job management and function deployment for CodeValdFunctions.
 service FunctionsService {
   // ListJobs returns all jobs for an agency, optionally filtered by status or function name.
   rpc ListJobs(ListJobsRequest) returns (ListJobsResponse);
@@ -72,4 +87,9 @@ service FunctionsService {
   // Error: NOT_FOUND if the job does not exist.
   // Error: FAILED_PRECONDITION if the job is in a terminal state.
   rpc CancelJob(CancelJobRequest) returns (CancelJobResponse);
+
+  // DeployFunction installs a new function binary into the functions directory.
+  // The function is immediately discoverable — no restart required.
+  // An AI agent can call this to add new functions at runtime.
+  rpc DeployFunction(DeployFunctionRequest) returns (DeployFunctionResponse);
 }

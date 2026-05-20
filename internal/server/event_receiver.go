@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"time"
 
@@ -74,27 +75,30 @@ func (s *EventReceiverServer) NotifyEvent(ctx context.Context, req *sharedev1.No
 	return &sharedev1.NotifyEventResponse{}, nil
 }
 
-// FunctionsDispatcher creates and executes a Job when an event matches a registered handler.
+// FunctionsDispatcher discovers and executes function binaries when an event arrives.
 type FunctionsDispatcher struct {
 	mgr      codevaldelfunctions.FunctionsManager
-	reg      functions.Registry
+	runner   *functions.BinaryRunner
 	agencyID string
 }
 
 // NewFunctionsDispatcher constructs a FunctionsDispatcher.
-func NewFunctionsDispatcher(mgr codevaldelfunctions.FunctionsManager, reg functions.Registry, agencyID string) *FunctionsDispatcher {
-	return &FunctionsDispatcher{mgr: mgr, reg: reg, agencyID: agencyID}
+func NewFunctionsDispatcher(mgr codevaldelfunctions.FunctionsManager, runner *functions.BinaryRunner, agencyID string) *FunctionsDispatcher {
+	return &FunctionsDispatcher{mgr: mgr, runner: runner, agencyID: agencyID}
 }
 
-// Dispatch looks up the handler for topic, creates a Job, runs the handler,
-// then marks the Job completed or failed based on the result.
+// Dispatch looks up the binary for topic, creates a Job, runs the binary,
+// then marks the Job completed or failed based on the output.
 func (d *FunctionsDispatcher) Dispatch(ctx context.Context, topic, payload string) {
-	handler, ok := d.reg.Lookup(topic)
+	name, binPath, ok := d.runner.Lookup(topic)
 	if !ok {
 		return
 	}
 
-	job, err := d.mgr.CreateJob(ctx, d.agencyID, topic, topic, payload)
+	var meta struct{ TaskID string }
+	_ = json.Unmarshal([]byte(payload), &meta)
+
+	job, err := d.mgr.CreateJob(ctx, d.agencyID, name, topic, payload, meta.TaskID)
 	if err != nil {
 		log.Printf("codevaldelfunctions: Dispatch: CreateJob topic=%s: %v", topic, err)
 		return
@@ -106,15 +110,28 @@ func (d *FunctionsDispatcher) Dispatch(ctx context.Context, topic, payload strin
 		return
 	}
 
-	result, handlerErr := handler(ctx, job, []byte(payload))
-	if handlerErr != nil {
-		if _, err := d.mgr.FailJob(ctx, d.agencyID, job.ID, handlerErr.Error()); err != nil {
+	out, runErr := d.runner.Run(ctx, binPath, functions.Input{
+		JobID:    job.ID,
+		AgencyID: d.agencyID,
+		TaskID:   meta.TaskID,
+		Payload:  payload,
+	})
+	if runErr != nil {
+		log.Printf("codevaldelfunctions: Dispatch: run binary job=%s: %v", job.ID, runErr)
+		if _, err := d.mgr.FailJob(ctx, d.agencyID, job.ID, runErr.Error()); err != nil {
 			log.Printf("codevaldelfunctions: Dispatch: FailJob job=%s: %v", job.ID, err)
 		}
 		return
 	}
 
-	if _, err := d.mgr.CompleteJob(ctx, d.agencyID, job.ID, string(result)); err != nil {
+	if out.Status == "error" {
+		if _, err := d.mgr.FailJob(ctx, d.agencyID, job.ID, out.Error); err != nil {
+			log.Printf("codevaldelfunctions: Dispatch: FailJob job=%s: %v", job.ID, err)
+		}
+		return
+	}
+
+	if _, err := d.mgr.CompleteJob(ctx, d.agencyID, job.ID, out.Result); err != nil {
 		log.Printf("codevaldelfunctions: Dispatch: CompleteJob job=%s: %v", job.ID, err)
 	}
 }

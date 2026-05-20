@@ -1,0 +1,5 @@
+{
+  "name": "compile-flutter",
+  "trigger": "work.task.completed",
+  "description": "Clones the task git branch and runs flutter analyze to check for compilation errors."
+}

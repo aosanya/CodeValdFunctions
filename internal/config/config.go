@@ -39,6 +39,18 @@ type Config struct {
 
 	// PingTimeout is the per-RPC timeout for each Register call (default 5s).
 	PingTimeout time.Duration
+
+	// GitCloneBase is the base URL for git cloning through Cross
+	// (env: FN_GIT_CLONE_BASE, default "").
+	GitCloneBase string
+
+	// DefaultRepo is the default repo name to compile
+	// (env: FN_DEFAULT_REPO, default "").
+	DefaultRepo string
+
+	// FunctionsDir is the directory scanned for function binaries and manifests.
+	// (env: FN_FUNCTIONS_DIR, default "/opt/functions")
+	FunctionsDir string
 }
 
 // Load reads configuration from environment variables, falling back to defaults.
@@ -68,5 +80,8 @@ func Load() Config {
 		AgencyID:       serverutil.EnvOrDefault("CODEVALDELFUNCTIONS_AGENCY_ID", ""),
 		PingInterval:   serverutil.ParseDurationString("CROSS_PING_INTERVAL", 20*time.Second),
 		PingTimeout:    serverutil.ParseDurationString("CROSS_PING_TIMEOUT", 5*time.Second),
+		GitCloneBase: serverutil.EnvOrDefault("FN_GIT_CLONE_BASE", ""),
+		DefaultRepo:  serverutil.EnvOrDefault("FN_DEFAULT_REPO", ""),
+		FunctionsDir: serverutil.EnvOrDefault("FN_FUNCTIONS_DIR", "/opt/functions"),
 	}
 }

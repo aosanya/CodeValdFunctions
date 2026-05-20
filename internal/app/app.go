@@ -80,14 +80,14 @@ func Run(cfg config.Config) error {
 		return err
 	}
 
-	reg := functions.NewRegistry()
-	functions.RegisterAll(reg)
+	runner := functions.NewBinaryRunner(cfg.FunctionsDir)
+	log.Printf("codevaldelfunctions: function runner scanning %s", cfg.FunctionsDir)
 
 	grpcServer, _ := serverutil.NewGRPCServer()
-	pb.RegisterFunctionsServiceServer(grpcServer, server.New(mgr))
+	pb.RegisterFunctionsServiceServer(grpcServer, server.New(mgr, runner))
 	healthpb.RegisterHealthServiceServer(grpcServer, health.New("codevaldelfunctions"))
 	if cfg.AgencyID != "" {
-		dispatcher := server.NewFunctionsDispatcher(mgr, reg, cfg.AgencyID)
+		dispatcher := server.NewFunctionsDispatcher(mgr, runner, cfg.AgencyID)
 		sharedev1.RegisterEventReceiverServiceServer(grpcServer, server.NewEventReceiver(backend, cfg.AgencyID, dispatcher))
 	}
 

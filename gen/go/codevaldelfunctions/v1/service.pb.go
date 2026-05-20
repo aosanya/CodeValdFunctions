@@ -495,6 +495,134 @@ func (x *CancelJobResponse) GetJob() *Job {
 	return nil
 }
 
+type DeployFunctionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AgencyId      string                 `protobuf:"bytes,1,opt,name=agency_id,json=agencyId,proto3" json:"agency_id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`               // function name, e.g. "compile-flutter"
+	Trigger       string                 `protobuf:"bytes,3,opt,name=trigger,proto3" json:"trigger,omitempty"`         // trigger event, e.g. "work.task.completed"
+	Binary        []byte                 `protobuf:"bytes,4,opt,name=binary,proto3" json:"binary,omitempty"`           // executable content (script, compiled binary, etc.)
+	Description   string                 `protobuf:"bytes,5,opt,name=description,proto3" json:"description,omitempty"` // optional human-readable description
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeployFunctionRequest) Reset() {
+	*x = DeployFunctionRequest{}
+	mi := &file_codevaldelfunctions_v1_service_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeployFunctionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeployFunctionRequest) ProtoMessage() {}
+
+func (x *DeployFunctionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_codevaldelfunctions_v1_service_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeployFunctionRequest.ProtoReflect.Descriptor instead.
+func (*DeployFunctionRequest) Descriptor() ([]byte, []int) {
+	return file_codevaldelfunctions_v1_service_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *DeployFunctionRequest) GetAgencyId() string {
+	if x != nil {
+		return x.AgencyId
+	}
+	return ""
+}
+
+func (x *DeployFunctionRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *DeployFunctionRequest) GetTrigger() string {
+	if x != nil {
+		return x.Trigger
+	}
+	return ""
+}
+
+func (x *DeployFunctionRequest) GetBinary() []byte {
+	if x != nil {
+		return x.Binary
+	}
+	return nil
+}
+
+func (x *DeployFunctionRequest) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+type DeployFunctionResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Path          string                 `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"` // path where the binary was written on the server
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeployFunctionResponse) Reset() {
+	*x = DeployFunctionResponse{}
+	mi := &file_codevaldelfunctions_v1_service_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeployFunctionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeployFunctionResponse) ProtoMessage() {}
+
+func (x *DeployFunctionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_codevaldelfunctions_v1_service_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeployFunctionResponse.ProtoReflect.Descriptor instead.
+func (*DeployFunctionResponse) Descriptor() ([]byte, []int) {
+	return file_codevaldelfunctions_v1_service_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *DeployFunctionResponse) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *DeployFunctionResponse) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
 var File_codevaldelfunctions_v1_service_proto protoreflect.FileDescriptor
 
 const file_codevaldelfunctions_v1_service_proto_rawDesc = "" +
@@ -534,11 +662,21 @@ const file_codevaldelfunctions_v1_service_proto_rawDesc = "" +
 	"\tagency_id\x18\x01 \x01(\tR\bagencyId\x12\x15\n" +
 	"\x06job_id\x18\x02 \x01(\tR\x05jobId\"B\n" +
 	"\x11CancelJobResponse\x12-\n" +
-	"\x03job\x18\x01 \x01(\v2\x1b.codevaldelfunctions.v1.JobR\x03job2\xac\x02\n" +
+	"\x03job\x18\x01 \x01(\v2\x1b.codevaldelfunctions.v1.JobR\x03job\"\x9c\x01\n" +
+	"\x15DeployFunctionRequest\x12\x1b\n" +
+	"\tagency_id\x18\x01 \x01(\tR\bagencyId\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x18\n" +
+	"\atrigger\x18\x03 \x01(\tR\atrigger\x12\x16\n" +
+	"\x06binary\x18\x04 \x01(\fR\x06binary\x12 \n" +
+	"\vdescription\x18\x05 \x01(\tR\vdescription\"@\n" +
+	"\x16DeployFunctionResponse\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
+	"\x04path\x18\x02 \x01(\tR\x04path2\x9d\x03\n" +
 	"\x10FunctionsService\x12]\n" +
 	"\bListJobs\x12'.codevaldelfunctions.v1.ListJobsRequest\x1a(.codevaldelfunctions.v1.ListJobsResponse\x12W\n" +
 	"\x06GetJob\x12%.codevaldelfunctions.v1.GetJobRequest\x1a&.codevaldelfunctions.v1.GetJobResponse\x12`\n" +
-	"\tCancelJob\x12(.codevaldelfunctions.v1.CancelJobRequest\x1a).codevaldelfunctions.v1.CancelJobResponseBZZXgithub.com/aosanya/CodeValdFunctions/gen/go/codevaldelfunctions/v1;codevaldelfunctionsv1b\x06proto3"
+	"\tCancelJob\x12(.codevaldelfunctions.v1.CancelJobRequest\x1a).codevaldelfunctions.v1.CancelJobResponse\x12o\n" +
+	"\x0eDeployFunction\x12-.codevaldelfunctions.v1.DeployFunctionRequest\x1a..codevaldelfunctions.v1.DeployFunctionResponseBZZXgithub.com/aosanya/CodeValdFunctions/gen/go/codevaldelfunctions/v1;codevaldelfunctionsv1b\x06proto3"
 
 var (
 	file_codevaldelfunctions_v1_service_proto_rawDescOnce sync.Once
@@ -552,16 +690,18 @@ func file_codevaldelfunctions_v1_service_proto_rawDescGZIP() []byte {
 	return file_codevaldelfunctions_v1_service_proto_rawDescData
 }
 
-var file_codevaldelfunctions_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_codevaldelfunctions_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_codevaldelfunctions_v1_service_proto_goTypes = []any{
-	(*Job)(nil),               // 0: codevaldelfunctions.v1.Job
-	(*JobFilter)(nil),         // 1: codevaldelfunctions.v1.JobFilter
-	(*ListJobsRequest)(nil),   // 2: codevaldelfunctions.v1.ListJobsRequest
-	(*ListJobsResponse)(nil),  // 3: codevaldelfunctions.v1.ListJobsResponse
-	(*GetJobRequest)(nil),     // 4: codevaldelfunctions.v1.GetJobRequest
-	(*GetJobResponse)(nil),    // 5: codevaldelfunctions.v1.GetJobResponse
-	(*CancelJobRequest)(nil),  // 6: codevaldelfunctions.v1.CancelJobRequest
-	(*CancelJobResponse)(nil), // 7: codevaldelfunctions.v1.CancelJobResponse
+	(*Job)(nil),                    // 0: codevaldelfunctions.v1.Job
+	(*JobFilter)(nil),              // 1: codevaldelfunctions.v1.JobFilter
+	(*ListJobsRequest)(nil),        // 2: codevaldelfunctions.v1.ListJobsRequest
+	(*ListJobsResponse)(nil),       // 3: codevaldelfunctions.v1.ListJobsResponse
+	(*GetJobRequest)(nil),          // 4: codevaldelfunctions.v1.GetJobRequest
+	(*GetJobResponse)(nil),         // 5: codevaldelfunctions.v1.GetJobResponse
+	(*CancelJobRequest)(nil),       // 6: codevaldelfunctions.v1.CancelJobRequest
+	(*CancelJobResponse)(nil),      // 7: codevaldelfunctions.v1.CancelJobResponse
+	(*DeployFunctionRequest)(nil),  // 8: codevaldelfunctions.v1.DeployFunctionRequest
+	(*DeployFunctionResponse)(nil), // 9: codevaldelfunctions.v1.DeployFunctionResponse
 }
 var file_codevaldelfunctions_v1_service_proto_depIdxs = []int32{
 	1, // 0: codevaldelfunctions.v1.ListJobsRequest.filter:type_name -> codevaldelfunctions.v1.JobFilter
@@ -571,11 +711,13 @@ var file_codevaldelfunctions_v1_service_proto_depIdxs = []int32{
 	2, // 4: codevaldelfunctions.v1.FunctionsService.ListJobs:input_type -> codevaldelfunctions.v1.ListJobsRequest
 	4, // 5: codevaldelfunctions.v1.FunctionsService.GetJob:input_type -> codevaldelfunctions.v1.GetJobRequest
 	6, // 6: codevaldelfunctions.v1.FunctionsService.CancelJob:input_type -> codevaldelfunctions.v1.CancelJobRequest
-	3, // 7: codevaldelfunctions.v1.FunctionsService.ListJobs:output_type -> codevaldelfunctions.v1.ListJobsResponse
-	5, // 8: codevaldelfunctions.v1.FunctionsService.GetJob:output_type -> codevaldelfunctions.v1.GetJobResponse
-	7, // 9: codevaldelfunctions.v1.FunctionsService.CancelJob:output_type -> codevaldelfunctions.v1.CancelJobResponse
-	7, // [7:10] is the sub-list for method output_type
-	4, // [4:7] is the sub-list for method input_type
+	8, // 7: codevaldelfunctions.v1.FunctionsService.DeployFunction:input_type -> codevaldelfunctions.v1.DeployFunctionRequest
+	3, // 8: codevaldelfunctions.v1.FunctionsService.ListJobs:output_type -> codevaldelfunctions.v1.ListJobsResponse
+	5, // 9: codevaldelfunctions.v1.FunctionsService.GetJob:output_type -> codevaldelfunctions.v1.GetJobResponse
+	7, // 10: codevaldelfunctions.v1.FunctionsService.CancelJob:output_type -> codevaldelfunctions.v1.CancelJobResponse
+	9, // 11: codevaldelfunctions.v1.FunctionsService.DeployFunction:output_type -> codevaldelfunctions.v1.DeployFunctionResponse
+	8, // [8:12] is the sub-list for method output_type
+	4, // [4:8] is the sub-list for method input_type
 	4, // [4:4] is the sub-list for extension type_name
 	4, // [4:4] is the sub-list for extension extendee
 	0, // [0:4] is the sub-list for field type_name
@@ -592,7 +734,7 @@ func file_codevaldelfunctions_v1_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_codevaldelfunctions_v1_service_proto_rawDesc), len(file_codevaldelfunctions_v1_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

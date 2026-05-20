@@ -6,7 +6,7 @@ import "context"
 // It manages Job entities and their lifecycle transitions.
 type FunctionsManager interface {
 	// CreateJob creates a new Job in the pending state.
-	CreateJob(ctx context.Context, agencyID, functionName, triggerEvent, payload string) (Job, error)
+	CreateJob(ctx context.Context, agencyID, functionName, triggerEvent, payload, taskID string) (Job, error)
 
 	// GetJob retrieves a single Job by ID.
 	GetJob(ctx context.Context, agencyID, jobID string) (Job, error)

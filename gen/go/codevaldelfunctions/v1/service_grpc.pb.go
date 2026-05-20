@@ -19,16 +19,17 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	FunctionsService_ListJobs_FullMethodName  = "/codevaldelfunctions.v1.FunctionsService/ListJobs"
-	FunctionsService_GetJob_FullMethodName    = "/codevaldelfunctions.v1.FunctionsService/GetJob"
-	FunctionsService_CancelJob_FullMethodName = "/codevaldelfunctions.v1.FunctionsService/CancelJob"
+	FunctionsService_ListJobs_FullMethodName       = "/codevaldelfunctions.v1.FunctionsService/ListJobs"
+	FunctionsService_GetJob_FullMethodName         = "/codevaldelfunctions.v1.FunctionsService/GetJob"
+	FunctionsService_CancelJob_FullMethodName      = "/codevaldelfunctions.v1.FunctionsService/CancelJob"
+	FunctionsService_DeployFunction_FullMethodName = "/codevaldelfunctions.v1.FunctionsService/DeployFunction"
 )
 
 // FunctionsServiceClient is the client API for FunctionsService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// FunctionsService exposes job management for CodeValdFunctions.
+// FunctionsService exposes job management and function deployment for CodeValdFunctions.
 type FunctionsServiceClient interface {
 	// ListJobs returns all jobs for an agency, optionally filtered by status or function name.
 	ListJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error)
@@ -39,6 +40,10 @@ type FunctionsServiceClient interface {
 	// Error: NOT_FOUND if the job does not exist.
 	// Error: FAILED_PRECONDITION if the job is in a terminal state.
 	CancelJob(ctx context.Context, in *CancelJobRequest, opts ...grpc.CallOption) (*CancelJobResponse, error)
+	// DeployFunction installs a new function binary into the functions directory.
+	// The function is immediately discoverable — no restart required.
+	// An AI agent can call this to add new functions at runtime.
+	DeployFunction(ctx context.Context, in *DeployFunctionRequest, opts ...grpc.CallOption) (*DeployFunctionResponse, error)
 }
 
 type functionsServiceClient struct {
@@ -79,11 +84,21 @@ func (c *functionsServiceClient) CancelJob(ctx context.Context, in *CancelJobReq
 	return out, nil
 }
 
+func (c *functionsServiceClient) DeployFunction(ctx context.Context, in *DeployFunctionRequest, opts ...grpc.CallOption) (*DeployFunctionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(DeployFunctionResponse)
+	err := c.cc.Invoke(ctx, FunctionsService_DeployFunction_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FunctionsServiceServer is the server API for FunctionsService service.
 // All implementations must embed UnimplementedFunctionsServiceServer
 // for forward compatibility.
 //
-// FunctionsService exposes job management for CodeValdFunctions.
+// FunctionsService exposes job management and function deployment for CodeValdFunctions.
 type FunctionsServiceServer interface {
 	// ListJobs returns all jobs for an agency, optionally filtered by status or function name.
 	ListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error)
@@ -94,6 +109,10 @@ type FunctionsServiceServer interface {
 	// Error: NOT_FOUND if the job does not exist.
 	// Error: FAILED_PRECONDITION if the job is in a terminal state.
 	CancelJob(context.Context, *CancelJobRequest) (*CancelJobResponse, error)
+	// DeployFunction installs a new function binary into the functions directory.
+	// The function is immediately discoverable — no restart required.
+	// An AI agent can call this to add new functions at runtime.
+	DeployFunction(context.Context, *DeployFunctionRequest) (*DeployFunctionResponse, error)
 	mustEmbedUnimplementedFunctionsServiceServer()
 }
 
@@ -112,6 +131,9 @@ func (UnimplementedFunctionsServiceServer) GetJob(context.Context, *GetJobReques
 }
 func (UnimplementedFunctionsServiceServer) CancelJob(context.Context, *CancelJobRequest) (*CancelJobResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CancelJob not implemented")
+}
+func (UnimplementedFunctionsServiceServer) DeployFunction(context.Context, *DeployFunctionRequest) (*DeployFunctionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeployFunction not implemented")
 }
 func (UnimplementedFunctionsServiceServer) mustEmbedUnimplementedFunctionsServiceServer() {}
 func (UnimplementedFunctionsServiceServer) testEmbeddedByValue()                          {}
@@ -188,6 +210,24 @@ func _FunctionsService_CancelJob_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FunctionsService_DeployFunction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeployFunctionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FunctionsServiceServer).DeployFunction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FunctionsService_DeployFunction_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FunctionsServiceServer).DeployFunction(ctx, req.(*DeployFunctionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FunctionsService_ServiceDesc is the grpc.ServiceDesc for FunctionsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -206,6 +246,10 @@ var FunctionsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CancelJob",
 			Handler:    _FunctionsService_CancelJob_Handler,
+		},
+		{
+			MethodName: "DeployFunction",
+			Handler:    _FunctionsService_DeployFunction_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

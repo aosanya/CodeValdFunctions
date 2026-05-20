@@ -32,7 +32,7 @@ func NewFunctionsManager(dm entitygraph.DataManager, pub CrossPublisher, agencyI
 }
 
 // CreateJob creates a new Job entity in the pending state.
-func (m *functionsManager) CreateJob(ctx context.Context, agencyID, functionName, triggerEvent, payload string) (Job, error) {
+func (m *functionsManager) CreateJob(ctx context.Context, agencyID, functionName, triggerEvent, payload, taskID string) (Job, error) {
 	now := time.Now().UTC().Format(time.RFC3339)
 	entity, err := m.dm.CreateEntity(ctx, entitygraph.CreateEntityRequest{
 		AgencyID: agencyID,
@@ -42,6 +42,7 @@ func (m *functionsManager) CreateJob(ctx context.Context, agencyID, functionName
 			"function_name":   functionName,
 			"trigger_event":   triggerEvent,
 			"trigger_payload": payload,
+			"task_id":         taskID,
 			"result":          "",
 			"error":           "",
 			"retry_count":     0,

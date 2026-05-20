@@ -52,6 +52,10 @@ type Job struct {
 	// TriggerPayload is the JSON-encoded event payload received from Cross.
 	TriggerPayload string
 
+	// TaskID is the platform task ID extracted from the trigger payload,
+	// used to correlate this Job with a CodeValdWork task.
+	TaskID string
+
 	// Result is the JSON-encoded function output on successful completion.
 	Result string
 

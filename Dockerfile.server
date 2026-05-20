@@ -7,8 +7,8 @@
 # Invoked from Deployment/local/docker-compose.yml as:
 #   docker compose build codevaldelfunctions
 
-# ── Build stage ───────────────────────────────────────────────────────────────
-FROM golang:1.25-alpine AS build
+# ── Stage 1: Go build ─────────────────────────────────────────────────────────
+FROM golang:1.25-alpine AS gobuild
 
 WORKDIR /src
 
@@ -24,10 +24,43 @@ RUN go mod download
 COPY CodeValdFunctions/ ./
 RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -o /codevaldelfunctions-server ./cmd/server
 
-# ── Runtime stage ─────────────────────────────────────────────────────────────
-FROM gcr.io/distroless/static-debian12
+# ── Stage 2: Flutter SDK ──────────────────────────────────────────────────────
+FROM debian:bookworm-slim AS fluttersdk
 
-COPY --from=build /codevaldelfunctions-server /codevaldelfunctions-server
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    ca-certificates \
+    curl \
+    unzip \
+    xz-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN git clone --depth 1 -b stable https://github.com/flutter/flutter.git /opt/flutter
+
+ENV PATH="/opt/flutter/bin:${PATH}"
+ENV FLUTTER_ROOT="/opt/flutter"
+
+RUN flutter config --no-analytics && \
+    flutter precache --no-android --no-ios --no-fuchsia --no-linux --no-macos --no-windows
+
+# ── Runtime stage ─────────────────────────────────────────────────────────────
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    ca-certificates \
+    python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=fluttersdk /opt/flutter /opt/flutter
+COPY --from=gobuild /codevaldelfunctions-server /codevaldelfunctions-server
+
+# Bundled function binaries and manifests (hot-replaceable at runtime via DeployFunction RPC)
+COPY CodeValdFunctions/functions/ /opt/functions/
+RUN chmod +x /opt/functions/compile-flutter
+
+ENV PATH="/opt/flutter/bin:${PATH}"
+ENV FLUTTER_ROOT="/opt/flutter"
 
 # gRPC port — value set by CODEVALDELFUNCTIONS_GRPC_PORT at runtime
 EXPOSE 50065

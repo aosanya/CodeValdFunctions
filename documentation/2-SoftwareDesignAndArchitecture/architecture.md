@@ -3,9 +3,10 @@
 ## What CodeValdFunctions Is
 
 CodeValdFunctions is an event-driven compute service for the CodeVald platform.
-It executes pre-built function handlers in response to platform events, tracking
-each execution as a `Job` entity. Functions run external tools in a sandboxed
-subprocess with full network, filesystem, and resource isolation.
+It executes standalone function binaries in response to platform events, tracking
+each execution as a `Job` entity. Functions are independent executables discovered
+from a directory on disk — any language, any runtime, hot-deployable at runtime
+without restarting the service.
 
 ---
 
@@ -17,32 +18,28 @@ CodeValdCross
     ▼
 Event Receiver
     │
-    └── match against agency step definitions
+    └── BinaryRunner.Lookup(triggerEvent)
               │
      ┌────────┴────────┐
-     │ step found       │ no match
+     │ match found      │ no match
      ▼                 ▼
 Job Created          discard
 (pending)            (logged)
      │
 Job Started (running)
      │
-Input Resolver
-(fetch inputs via Cross)
+BinaryRunner.Run(ctx, binaryPath, Input)
+  stdin: { job_id, agency_id, task_id, payload }
+  subprocess exec (no sandbox required — binary owns its own isolation)
      │
-Temp Dir Created
+┌────┴─────────────────────┐
+│ stdout JSON parseable     │ stdout unparseable + exit ≠ 0
+▼                          ▼
+Output.Status              infrastructure error → FailJob
+"ok"/"issues-found" → CompleteJob
+"error"             → FailJob
      │
-Sandbox Launcher
-exec.Command — Linux namespaces + RLIMIT
-(no network, restricted FS, bounded resources)
-     │
-┌────┴────┐
-│ exit 0  │ exit ≠ 0
-▼         ▼
-CompleteJob  FailJob
-result=stdout  error=stderr
-     │         │
-publish  functions.job.completed / functions.job.failed
+publish functions.job.completed / functions.job.failed
 ```
 
 ---
@@ -52,27 +49,82 @@ publish  functions.job.completed / functions.job.failed
 | Decision | Choice | Rationale |
 |---|---|---|
 | Trigger model | Agency step definitions | Each agency configures which events run which functions |
-| Execution | Named binary via `exec.Command` | No containers; each handler hardcodes its tool invocation |
-| Sandbox | Linux namespaces + `RLIMIT` | Full isolation, no external runtime dependency |
-| Input resolution | All service calls via CodeValdCross | Maintains platform routing; no direct service-to-service |
-| Working directory | Temp-per-job, deleted after run | Stateless; no cross-job contamination |
-| Output | `Job.result` + completion event | Simple; downstream services subscribe to done events |
+| Execution | Standalone binary via `exec.Command` | Any language, independently deployable, no recompile needed |
+| Discovery | JSON manifest sidecar per binary | Rescanned on every invocation — no restart needed for new functions |
+| Hot deploy | `DeployFunction` gRPC RPC | AI agents can deploy new functions at runtime |
+| Protocol | stdin JSON → stdout JSON | Simple, language-agnostic, testable with any JSON tool |
+| Output | `Job.result` + completion event | Downstream services subscribe to done events |
 | Storage | ArangoDB via `entitygraph.DataManager` | Consistent with platform; Jobs in `functions_entities` |
 | Registration | Heartbeat to Cross every 20 s | Subscription list derived from registered step events |
 
 ---
 
+## Micro-Binary Plugin Architecture
+
+Each function is a standalone executable placed in the functions directory
+(default `/opt/functions`). Alongside it lives a JSON manifest sidecar:
+
+```
+/opt/functions/
+├── compile-flutter          # Python script (chmod +x)
+├── compile-flutter.json     # manifest
+├── lint-yaml                # Shell script
+├── lint-yaml.json           # manifest
+└── ...
+```
+
+**Manifest format** (`{name}.json`):
+```json
+{
+  "name": "compile-flutter",
+  "trigger": "work.task.completed",
+  "description": "Clones the task git branch and runs flutter analyze."
+}
+```
+
+**Runtime protocol:**
+
+| | Detail |
+|---|---|
+| stdin | `{"job_id":"…","agency_id":"…","task_id":"…","payload":"…"}` |
+| stdout | `{"status":"ok"\|"issues-found"\|"error","result":"…","error":"…"}` |
+| exit 0 | stdout is parsed; status field drives job outcome |
+| exit ≠ 0 + unparseable stdout | infrastructure failure → job failed |
+
+Functions decide their own outcome via the `status` field:
+- `"ok"` — success, job completes
+- `"issues-found"` — analysis found problems (not an infra failure), job completes
+- `"error"` — function-level error, job fails
+
+**Hot deployment:** The `BinaryRunner` rescans manifests on every `Lookup` call,
+so a new function becomes available immediately after its binary and manifest are
+written to disk — no service restart required. The `DeployFunction` gRPC RPC
+automates writing both files.
+
+---
+
 ## Components
 
-| Component | Description | Detail |
-|---|---|---|
-| Event Receiver | Receives `NotifyEvent` RPC; matches against step definitions | [event-subscription.md](../3-SofwareDevelopment/mvp-details/event-subscription.md) |
-| Agency Step Definitions | Agency pipeline: list of `{ trigger_event, function }` bindings | [architecture-steps.md](architecture-steps.md) |
-| Job Lifecycle | Creates and transitions `Job` entities; enforces valid state machine | [job-lifecycle.md](../3-SofwareDevelopment/mvp-details/job-lifecycle.md) |
-| Function Registry | Static in-process map of handler names to implementations | [function-registry.md](../3-SofwareDevelopment/mvp-details/function-registry.md) |
-| Input Resolver | Each handler fetches its own inputs via the Cross HTTP client | — |
-| Sandbox Launcher | Wraps `exec.Command` with namespace isolation and resource caps | [architecture-sandbox.md](architecture-sandbox.md) |
-| gRPC API | `FunctionsService` — Job query and cancel endpoints | [architecture-service-api.md](architecture-service-api.md) |
+| Component | Description |
+|---|---|
+| Event Receiver | Receives `NotifyEvent` RPC; matches against step definitions |
+| BinaryRunner | Scans manifests, executes function binaries, handles deploy |
+| Job Lifecycle | Creates and transitions `Job` entities; enforces valid state machine |
+| gRPC API | `FunctionsService` — Job query, cancel, and function deploy endpoints |
+
+---
+
+## gRPC API
+
+| RPC | Description |
+|---|---|
+| `ListJobs` | List jobs for an agency, optionally filtered by status or function name |
+| `GetJob` | Fetch a single job by ID |
+| `CancelJob` | Cancel a pending or running job |
+| `DeployFunction` | Write a new function binary + manifest to the functions directory |
+
+`DeployFunction` is designed for AI agent use: an agent can generate a function
+script and deploy it at runtime without any human intervention or service restart.
 
 ---
 
@@ -80,11 +132,11 @@ publish  functions.job.completed / functions.job.failed
 
 ### Consumed (from CodeValdCross)
 
-Derived from the agency's step definitions at startup. For the compiler workload:
+Derived from agency step definitions at startup. Matched against manifest triggers.
 
-| Topic | Publisher | Step |
+| Topic | Publisher | Default function |
 |---|---|---|
-| `work.task.completed` | CodeValdWork | Compiler function |
+| `work.task.completed` | CodeValdWork | `compile-flutter` |
 
 ### Published
 
@@ -97,17 +149,16 @@ Derived from the agency's step definitions at startup. For the compiler workload
 
 ## Storage
 
-Jobs and pipeline definitions stored in ArangoDB via `entitygraph.DataManager`.
+Jobs stored in ArangoDB via `entitygraph.DataManager`.
 See [architecture-storage.md](architecture-storage.md).
 
 ---
 
-## Workloads
+## Bundled Functions
 
-### Compiler
+### compile-flutter
 
-Triggered by `work.task.completed`. Fetches files from the `task/{task-id}` git
-branch via CodeValdGit (through Cross), materialises them into a temp directory,
-runs the compiler binary under sandbox isolation, and publishes the result.
+Triggered by `work.task.completed`. Clones the `task/{task_id}` git branch,
+runs `flutter analyze --no-pub`, and returns analysis output.
 
 See [architecture-compiler.md](architecture-compiler.md).

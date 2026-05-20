@@ -7,6 +7,7 @@ import (
 
 	codevaldelfunctions "github.com/aosanya/CodeValdFunctions"
 	pb "github.com/aosanya/CodeValdFunctions/gen/go/codevaldelfunctions/v1"
+	"github.com/aosanya/CodeValdFunctions/internal/functions"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -14,12 +15,13 @@ import (
 // Server implements pb.FunctionsServiceServer.
 type Server struct {
 	pb.UnimplementedFunctionsServiceServer
-	mgr codevaldelfunctions.FunctionsManager
+	mgr    codevaldelfunctions.FunctionsManager
+	runner *functions.BinaryRunner
 }
 
-// New constructs a Server backed by the given FunctionsManager.
-func New(mgr codevaldelfunctions.FunctionsManager) *Server {
-	return &Server{mgr: mgr}
+// New constructs a Server backed by the given FunctionsManager and BinaryRunner.
+func New(mgr codevaldelfunctions.FunctionsManager, runner *functions.BinaryRunner) *Server {
+	return &Server{mgr: mgr, runner: runner}
 }
 
 // ListJobs returns all jobs for the agency, optionally filtered.
@@ -65,6 +67,24 @@ func (s *Server) CancelJob(ctx context.Context, req *pb.CancelJobRequest) (*pb.C
 		return nil, status.Errorf(codes.Internal, "cancel job: %v", err)
 	}
 	return &pb.CancelJobResponse{Job: jobToProto(job)}, nil
+}
+
+// DeployFunction writes a function binary and manifest to the functions directory.
+func (s *Server) DeployFunction(ctx context.Context, req *pb.DeployFunctionRequest) (*pb.DeployFunctionResponse, error) {
+	if req.GetName() == "" {
+		return nil, status.Error(codes.InvalidArgument, "name is required")
+	}
+	if req.GetTrigger() == "" {
+		return nil, status.Error(codes.InvalidArgument, "trigger is required")
+	}
+	if len(req.GetBinary()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "binary is required")
+	}
+	if err := s.runner.Deploy(req.GetName(), req.GetTrigger(), req.GetDescription(), req.GetBinary()); err != nil {
+		return nil, status.Errorf(codes.Internal, "deploy function: %v", err)
+	}
+	path := s.runner.BinaryPath(req.GetName())
+	return &pb.DeployFunctionResponse{Name: req.GetName(), Path: path}, nil
 }
 
 func jobToProto(j codevaldelfunctions.Job) *pb.Job {

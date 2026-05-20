@@ -16,7 +16,7 @@ func newTestManager() FunctionsManager {
 
 func mustCreateJob(t *testing.T, mgr FunctionsManager) Job {
 	t.Helper()
-	job, err := mgr.CreateJob(context.Background(), testAgencyID, "compile", "work.task.completed", `{}`)
+	job, err := mgr.CreateJob(context.Background(), testAgencyID, "compile", "work.task.completed", `{}`, "")
 	if err != nil {
 		t.Fatalf("CreateJob: %v", err)
 	}

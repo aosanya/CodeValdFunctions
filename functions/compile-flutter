@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+"""
+compile-flutter — CodeValdFunctions binary function
+
+Protocol:
+  stdin:  JSON { "job_id": "...", "agency_id": "...", "task_id": "...", "payload": "..." }
+  stdout: JSON { "status": "ok"|"error"|"issues-found", "result": "...", "error": "..." }
+  exit 0: job completes; exit 1: job fails (infrastructure error only)
+
+Environment:
+  FN_GIT_CLONE_BASE  base URL for git clone (e.g. http://codevaldcross:8081/git)
+  FN_DEFAULT_REPO    repository name (e.g. shared-farms)
+"""
+
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+
+
+def fail(msg):
+    print(json.dumps({"status": "error", "error": msg}))
+    sys.exit(1)
+
+
+def main():
+    try:
+        inp = json.load(sys.stdin)
+    except Exception as e:
+        fail(f"parse stdin: {e}")
+
+    task_id   = inp.get("task_id", "")
+    agency_id = inp.get("agency_id", "")
+    job_id    = inp.get("job_id", "")
+
+    if not task_id:
+        fail("task_id missing from input")
+
+    git_base = os.environ.get("FN_GIT_CLONE_BASE", "")
+    repo     = os.environ.get("FN_DEFAULT_REPO", "")
+    if not git_base or not repo:
+        fail("FN_GIT_CLONE_BASE or FN_DEFAULT_REPO not set")
+
+    branch    = f"task/{task_id}"
+    clone_url = f"{git_base.rstrip('/')}/{agency_id}/{repo}"
+
+    print(f"compile-flutter: job={job_id} cloning {clone_url} branch={branch}", file=sys.stderr)
+
+    tmpdir = tempfile.mkdtemp(prefix="flutter-build-")
+    try:
+        clone = subprocess.run(
+            ["git", "clone", "--depth=1", "--branch", branch, clone_url, tmpdir],
+            capture_output=True, text=True
+        )
+        if clone.returncode != 0:
+            fail(f"git clone failed for branch {branch}: {clone.stderr.strip()}")
+
+        print(f"compile-flutter: running flutter analyze in {tmpdir}", file=sys.stderr)
+        analyze = subprocess.run(
+            ["flutter", "analyze", "--no-pub"],
+            cwd=tmpdir,
+            capture_output=True, text=True
+        )
+
+        output = (analyze.stdout + analyze.stderr).strip()
+        status = "ok" if analyze.returncode == 0 else "issues-found"
+
+        result = json.dumps({
+            "task_id": task_id,
+            "status":  status,
+            "output":  output,
+        })
+        print(json.dumps({"status": status, "result": result}))
+
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+
+
+if __name__ == "__main__":
+    main()
