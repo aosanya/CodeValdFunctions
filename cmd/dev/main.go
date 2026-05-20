@@ -1,8 +1,7 @@
-// Command dev runs CodeValdFunctions locally against a local ArangoDB. Defaults
-// differ from production: listens on :50052, talks to http://localhost:8529,
-// and leaves CROSS_GRPC_ADDR empty so dev runs standalone (no Cross required).
-// The Makefile's `make dev` target sources CodeValdFunctions/.env before exec so
-// real passwords stay out of the source tree.
+// Command dev runs CodeValdFunctions locally. Defaults differ from production:
+// listens on :50062, talks to http://localhost:8529, and leaves CROSS_GRPC_ADDR
+// empty so dev runs standalone (no Cross required).
+// The Makefile's `make dev` target sources CodeValdFunctions/.env before exec.
 package main
 
 import (
@@ -14,14 +13,12 @@ import (
 )
 
 func main() {
-	// Dev defaults — only applied when the env var is unset, so the shell or
-	// .env can still override any of them.
-	setDefault("GIT_GRPC_LISTEN_ADDR", ":50052")
-	setDefault("GIT_ARANGO_ENDPOINT", "http://localhost:8529")
+	setDefault("CODEVALDELFUNCTIONS_GRPC_PORT", "50062")
+	setDefault("FN_ARANGO_ENDPOINT", "http://localhost:8529")
 
-	log.Println("codevaldgit[dev]: starting with local-dev defaults")
+	log.Println("codevaldelfunctions[dev]: starting with local-dev defaults")
 	if err := app.Run(config.Load()); err != nil {
-		log.Fatalf("codevaldgit[dev]: %v", err)
+		log.Fatalf("codevaldelfunctions[dev]: %v", err)
 	}
 }
 

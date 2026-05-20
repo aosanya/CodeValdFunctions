@@ -1,8 +1,5 @@
-// Package registrar provides the CodeValdFunctions service registrar.
-// It wraps the shared-library heartbeat registrar and additionally implements
-// [codevaldgit.CrossPublisher] so the [GitManager] can notify
-// CodeValdCross whenever a git lifecycle event occurs (repo created, branch
-// merged, conflict detected).
+// Package registrar provides the CodeValdFunctions heartbeat registrar and
+// CrossPublisher implementation.
 package registrar
 
 import (
@@ -10,35 +7,28 @@ import (
 	"log"
 	"time"
 
-	codevaldgit "github.com/aosanya/CodeValdFunctions"
+	codevaldelfunctions "github.com/aosanya/CodeValdFunctions"
 	"github.com/aosanya/CodeValdSharedLib/eventbus"
 	sharedregistrar "github.com/aosanya/CodeValdSharedLib/registrar"
 	"github.com/aosanya/CodeValdSharedLib/types"
 )
 
-// Registrar handles two responsibilities:
-//  1. Sending periodic heartbeat registrations to CodeValdCross via the
-//     shared-library registrar (Run / Close).
-//  2. Implementing [codevaldgit.CrossPublisher] so that GitManager can
-//     fire lifecycle events (e.g. "git.repo.created") on successful operations.
-//
-// Construct via [New]; start heartbeats by calling Run in a goroutine; stop
-// by cancelling the context then calling Close.
+// Registrar sends periodic heartbeat registrations to CodeValdCross and
+// implements [codevaldelfunctions.CrossPublisher] for event publishing.
 type Registrar struct {
 	heartbeat sharedregistrar.Registrar
 }
 
-// Compile-time assertion that *Registrar implements codevaldgit.CrossPublisher.
-var _ codevaldgit.CrossPublisher = (*Registrar)(nil)
+// Compile-time assertion that *Registrar implements CrossPublisher.
+var _ codevaldelfunctions.CrossPublisher = (*Registrar)(nil)
 
-// New constructs a Registrar that heartbeats to the CodeValdCross gRPC server
-// at crossAddr.
+// New constructs a Registrar that heartbeats to the CodeValdCross gRPC server.
 //
-//   - crossAddr    — host:port of the CodeValdCross gRPC server
+//   - crossAddr     — host:port of the CodeValdCross gRPC server
 //   - advertiseAddr — host:port that Cross dials back on
-//   - agencyID     — agency this instance serves
-//   - pingInterval — heartbeat cadence; ≤ 0 means only the initial ping
-//   - pingTimeout  — per-RPC timeout for each Register call
+//   - agencyID      — agency this instance serves
+//   - pingInterval  — heartbeat cadence; ≤ 0 means only the initial ping
+//   - pingTimeout   — per-RPC timeout for each Register call
 func New(
 	crossAddr, advertiseAddr, agencyID string,
 	pingInterval, pingTimeout time.Duration,
@@ -47,10 +37,10 @@ func New(
 		crossAddr,
 		advertiseAddr,
 		agencyID,
-		"codevaldgit",
-		[]string{"git.repo.created", "git.branch.merged", "git.conflict.detected"},
+		"codevaldelfunctions",
+		[]string{"functions.job.completed", "functions.job.failed"},
 		[]string{},
-		gitRoutes(),
+		functionsRoutes(),
 		pingInterval,
 		pingTimeout,
 	)
@@ -60,46 +50,27 @@ func New(
 	return &Registrar{heartbeat: hb}, nil
 }
 
-// Run starts the heartbeat loop, sending an immediate Register ping to
-// CodeValdCross then repeating at the configured interval until ctx is
-// cancelled. Must be called inside a goroutine.
+// Run starts the heartbeat loop. Must be called inside a goroutine.
 func (r *Registrar) Run(ctx context.Context) {
 	r.heartbeat.Run(ctx)
 }
 
-// Close releases the underlying gRPC connection used for heartbeats.
-// Call after the context passed to Run has been cancelled.
+// Close releases the gRPC connection used for heartbeats.
 func (r *Registrar) Close() {
 	r.heartbeat.Close()
 }
 
-// Publish implements [eventbus.Publisher].
-// Best-effort notification — currently logs the event; a future iteration will
-// call a CodeValdCross Publish RPC once CodeValdCross exposes one.
-// Errors are always nil — the git operation has already been persisted and
-// must not be rolled back.
+// Publish implements [codevaldelfunctions.CrossPublisher].
+// Errors are logged but not returned — the triggering operation is already
+// persisted.
 func (r *Registrar) Publish(_ context.Context, e eventbus.Event) error {
-	log.Printf("registrar[codevaldgit]: publish topic=%q agencyID=%q payload=%T",
-		e.Topic, e.AgencyID, e.Payload)
-	// TODO(CROSS-007): call OrchestratorService.Publish RPC when available.
+	log.Printf("registrar[codevaldelfunctions]: publish topic=%q agencyID=%q", e.Topic, e.AgencyID)
+	// TODO(MVP-FN): call OrchestratorService.Publish RPC when wired.
 	return nil
 }
 
-// gitRoutes returns all HTTP routes that CodeValdFunctions exposes via Cross.
-// See routes.go for the per-concern helper functions.
-func gitRoutes() []types.RouteInfo {
-	var all []types.RouteInfo
-	all = append(all, repoRoutes()...)
-	all = append(all, branchRoutes()...)
-	all = append(all, tagRoutes()...)
-	all = append(all, fileRoutes()...)
-	all = append(all, historyRoutes()...)
-	all = append(all, smartHTTPRoutes()...)
-	all = append(all, importRoutes()...)
-	all = append(all, fetchBranchRoutes()...)
-	all = append(all, docsRoutes()...)
-	for _, r := range all {
-		log.Printf("[registrar] route: %s %s → %s", r.Method, r.Pattern, r.GrpcMethod)
-	}
-	return all
+// functionsRoutes returns HTTP routes CodeValdFunctions exposes via Cross.
+// Job gRPC API routes are added in MVP-FN-006.
+func functionsRoutes() []types.RouteInfo {
+	return []types.RouteInfo{}
 }

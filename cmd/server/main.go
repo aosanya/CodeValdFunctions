@@ -1,7 +1,7 @@
-// Command server is the production CodeValdFunctions gRPC microservice. Configuration
-// is read strictly from environment variables (see internal/config for the full
-// list). No .env is loaded; the container/orchestrator is expected to inject
-// the environment.
+// Command server starts the CodeValdFunctions gRPC microservice.
+//
+// Configuration is via environment variables — see internal/config for the
+// full list.
 package main
 
 import (
@@ -13,6 +13,6 @@ import (
 
 func main() {
 	if err := app.Run(config.Load()); err != nil {
-		log.Fatalf("codevaldgit: %v", err)
+		log.Fatalf("codevaldelfunctions: %v", err)
 	}
 }

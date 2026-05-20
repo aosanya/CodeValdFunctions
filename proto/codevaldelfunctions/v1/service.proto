@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package codevaldelfunctions.v1;
+
+option go_package = "github.com/aosanya/CodeValdFunctions/gen/go/codevaldelfunctions/v1;codevaldelfunctionsv1";
+
+// FunctionsService exposes job management for CodeValdFunctions.
+// Job query and cancel RPCs are added in MVP-FN-006 (ListJobs, GetJob, CancelJob).
+service FunctionsService {}
