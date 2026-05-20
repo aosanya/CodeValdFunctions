@@ -42,18 +42,36 @@ When the event subscriber receives an event:
 
 ## Pre-Built Functions
 
-> **Research gap**: Specific function implementations are deferred.
-> Each function will be documented here when added.
-
 Functions are registered in `internal/functions/init.go`:
 
 ```go
 func Register(r Registry) {
-    // e.g. r.Register("work.task.completed", handlers.CompileGoRepo)
+    r.Register("work.task.completed", handlers.CompileGoRepo)
 }
 ```
 
 Each function lives in its own file under `internal/functions/`.
+
+### `compile-go` — Go Compiler (`internal/functions/compile_go.go`)
+
+Triggered by `work.task.completed`. Compiles the source files written to the
+task's git branch (`task/{task-id}`) via CodeValdGit (through Cross).
+
+**Trigger**: `work.task.completed`
+Note: `work.task.completed` now fires only after ALL child sub-tasks complete
+(fixed in CodeValdWork `event_dispatcher.go`). This ensures the compiler sees
+the full branch, not a partial state mid-decomposition.
+
+**Flow**:
+1. Extract `task_id` from payload
+2. Resolve `task/{task-id}` branch in CodeValdGit via Cross
+3. Download all files from the branch into `/tmp/fn-{job-id}/src/`
+4. Run `go mod download` (outside sandbox) → populate `/tmp/fn-{job-id}/modcache/`
+5. Run `go build -mod=mod ./...` inside Linux namespace sandbox
+6. Store stdout/stderr on `Job.result` / `Job.error`
+7. Publish `functions.job.completed` or `functions.job.failed`
+
+See [architecture-compiler.md](../../../../documentation/2-SoftwareDesignAndArchitecture/architecture-compiler.md) for full detail.
 
 ---
 
