@@ -10,10 +10,13 @@ import (
 	"syscall"
 	"time"
 
+	codevaldelfunctions "github.com/aosanya/CodeValdFunctions"
 	pb "github.com/aosanya/CodeValdFunctions/gen/go/codevaldelfunctions/v1"
 	"github.com/aosanya/CodeValdFunctions/internal/config"
 	"github.com/aosanya/CodeValdFunctions/internal/registrar"
 	"github.com/aosanya/CodeValdFunctions/internal/server"
+	fnarangodb "github.com/aosanya/CodeValdFunctions/storage/arangodb"
+	"github.com/aosanya/CodeValdSharedLib/entitygraph"
 	healthpb "github.com/aosanya/CodeValdSharedLib/gen/go/codevaldhealth/v1"
 	"github.com/aosanya/CodeValdSharedLib/health"
 	"github.com/aosanya/CodeValdSharedLib/serverutil"
@@ -41,6 +44,29 @@ func Run(cfg config.Config) error {
 		}
 	} else {
 		log.Println("codevaldelfunctions: CROSS_GRPC_ADDR not set — skipping CodeValdCross registration")
+	}
+
+	// ── ArangoDB backend ─────────────────────────────────────────────────────
+	backend, err := fnarangodb.NewBackend(fnarangodb.Config{
+		Endpoint: cfg.ArangoEndpoint,
+		Username: cfg.ArangoUser,
+		Password: cfg.ArangoPassword,
+		Database: cfg.ArangoDatabase,
+		Schema:   codevaldelfunctions.DefaultFunctionsSchema(),
+	})
+	if err != nil {
+		return err
+	}
+
+	// ── Schema seed (idempotent on startup) ──────────────────────────────────
+	if cfg.AgencyID != "" {
+		seedCtx, seedCancel := context.WithTimeout(ctx, 10*time.Second)
+		if err := entitygraph.SeedSchema(seedCtx, backend, cfg.AgencyID, codevaldelfunctions.DefaultFunctionsSchema()); err != nil {
+			log.Printf("codevaldelfunctions: schema seed: %v", err)
+		}
+		seedCancel()
+	} else {
+		log.Println("codevaldelfunctions: CODEVALDELFUNCTIONS_AGENCY_ID not set — skipping schema seed")
 	}
 
 	lis, err := net.Listen("tcp", ":"+cfg.GRPCPort)
