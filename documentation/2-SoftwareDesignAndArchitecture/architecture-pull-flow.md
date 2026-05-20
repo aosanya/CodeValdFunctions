@@ -1,3 +1,7 @@
+> ⚠️ **DEPRECATED** — This file was copied from CodeValdGit and describes git service internals that do not apply to CodeValdFunctions. Retained for reference only. See [architecture.md](architecture.md) for the correct CodeValdFunctions architecture.
+
+---
+
 # Git Pull / Clone Flow — Architecture & Gap Analysis
 
 > **Last updated**: 2026-04-15
@@ -26,11 +30,15 @@ sequence is two HTTP round-trips.
 ```
 Client → GET /{agencyID}/{repoName}/info/refs?service=git-upload-pack
 Server ← 200 OK (Content-Type: application/x-git-upload-pack-advertisement)
-         pkt-line: "# service=git-upload-pack\n" + flush
+         pkt-line: "# service=git-upload-pack
+" + flush
          pkt-line: capabilities (ofs-delta, side-band-64k, …)
-         pkt-line: "sha1 refs/heads/main\n"
-         pkt-line: "sha1 refs/heads/task/abc-001\n"
-         pkt-line: "sha1 refs/tags/v1.0.0\n"
+         pkt-line: "sha1 refs/heads/main
+"
+         pkt-line: "sha1 refs/heads/task/abc-001
+"
+         pkt-line: "sha1 refs/tags/v1.0.0
+"
          flush
 ```
 
@@ -56,9 +64,12 @@ objects it is missing.
 
 ```
 Client → POST /{agencyID}/{repoName}/git-upload-pack
-         pkt-line: "want sha1\n"   ← commit SHA the client needs
-         pkt-line: "have sha1\n"   ← commit SHA the client already has
-         pkt-line: "done\n"
+         pkt-line: "want sha1
+"   ← commit SHA the client needs
+         pkt-line: "have sha1
+"   ← commit SHA the client already has
+         pkt-line: "done
+"
 Server ← 200 OK (Content-Type: application/x-git-upload-pack-result)
          PACK header + delta-compressed stream of all missing objects
 ```

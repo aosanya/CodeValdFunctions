@@ -1,3 +1,7 @@
+> ⚠️ **DEPRECATED** — This file was copied from CodeValdGit and describes git service internals that do not apply to CodeValdFunctions. Retained for reference only. See [architecture.md](architecture.md) for the correct CodeValdFunctions architecture.
+
+---
+
 # CodeValdFunctions — Merge Strategy
 
 > Source: `review/review.md` (March 2026 design review)
