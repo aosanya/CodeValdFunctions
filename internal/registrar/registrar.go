@@ -69,8 +69,37 @@ func (r *Registrar) Publish(_ context.Context, e eventbus.Event) error {
 	return nil
 }
 
-// functionsRoutes returns HTTP routes CodeValdFunctions exposes via Cross.
-// Job gRPC API routes are added in MVP-FN-006.
+// functionsRoutes returns the HTTP routes CodeValdFunctions exposes via Cross.
 func functionsRoutes() []types.RouteInfo {
-	return []types.RouteInfo{}
+	agency := types.PathBinding{URLParam: "agencyId", Field: "agency_id"}
+	return []types.RouteInfo{
+		{
+			Method:       "GET",
+			Pattern:      "/functions/{agencyId}/jobs",
+			Capability:   "list_jobs",
+			GrpcMethod:   "/codevaldelfunctions.v1.FunctionsService/ListJobs",
+			PathBindings: []types.PathBinding{agency},
+		},
+		{
+			Method:     "GET",
+			Pattern:    "/functions/{agencyId}/jobs/{jobId}",
+			Capability: "get_job",
+			GrpcMethod: "/codevaldelfunctions.v1.FunctionsService/GetJob",
+			PathBindings: []types.PathBinding{
+				agency,
+				{URLParam: "jobId", Field: "job_id"},
+			},
+		},
+		{
+			Method:     "DELETE",
+			Pattern:    "/functions/{agencyId}/jobs/{jobId}",
+			Capability: "cancel_job",
+			GrpcMethod: "/codevaldelfunctions.v1.FunctionsService/CancelJob",
+			IsWrite:    true,
+			PathBindings: []types.PathBinding{
+				agency,
+				{URLParam: "jobId", Field: "job_id"},
+			},
+		},
+	}
 }

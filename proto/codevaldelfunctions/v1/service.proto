@@ -4,6 +4,72 @@ package codevaldelfunctions.v1;
 
 option go_package = "github.com/aosanya/CodeValdFunctions/gen/go/codevaldelfunctions/v1;codevaldelfunctionsv1";
 
+// Job represents a single function execution triggered by a platform event.
+message Job {
+  string id              = 1;
+  string agency_id       = 2;
+  string status          = 3;
+  string function_name   = 4;
+  string trigger_event   = 5;
+  string trigger_payload = 6;
+  string result          = 7;
+  string error           = 8;
+  int32  retry_count     = 9;
+  string created_at      = 10;
+  string started_at      = 11;
+  string completed_at    = 12;
+}
+
+// JobFilter narrows ListJobs results. All fields are optional.
+message JobFilter {
+  string status        = 1; // filter by job status (e.g. "pending", "running")
+  string function_name = 2; // filter by the registered function name
+}
+
+// ── ListJobs ─────────────────────────────────────────────────────────────────
+
+message ListJobsRequest {
+  string    agency_id = 1;
+  JobFilter filter    = 2;
+}
+
+message ListJobsResponse {
+  repeated Job jobs = 1;
+}
+
+// ── GetJob ────────────────────────────────────────────────────────────────────
+
+message GetJobRequest {
+  string agency_id = 1;
+  string job_id    = 2;
+}
+
+message GetJobResponse {
+  Job job = 1;
+}
+
+// ── CancelJob ─────────────────────────────────────────────────────────────────
+
+message CancelJobRequest {
+  string agency_id = 1;
+  string job_id    = 2;
+}
+
+message CancelJobResponse {
+  Job job = 1;
+}
+
 // FunctionsService exposes job management for CodeValdFunctions.
-// Job query and cancel RPCs are added in MVP-FN-006 (ListJobs, GetJob, CancelJob).
-service FunctionsService {}
+service FunctionsService {
+  // ListJobs returns all jobs for an agency, optionally filtered by status or function name.
+  rpc ListJobs(ListJobsRequest) returns (ListJobsResponse);
+
+  // GetJob returns a single job by ID.
+  // Error: NOT_FOUND if the job does not exist.
+  rpc GetJob(GetJobRequest) returns (GetJobResponse);
+
+  // CancelJob cancels a pending or running job.
+  // Error: NOT_FOUND if the job does not exist.
+  // Error: FAILED_PRECONDITION if the job is in a terminal state.
+  rpc CancelJob(CancelJobRequest) returns (CancelJobResponse);
+}

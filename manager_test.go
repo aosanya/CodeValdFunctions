@@ -208,6 +208,48 @@ func TestCancelJob_InvalidFromCompleted(t *testing.T) {
 	}
 }
 
+// ── ListJobs ──────────────────────────────────────────────────────────────────
+
+func TestListJobs_Empty(t *testing.T) {
+	mgr := newTestManager()
+	jobs, err := mgr.ListJobs(context.Background(), testAgencyID, JobFilter{})
+	if err != nil {
+		t.Fatalf("ListJobs: %v", err)
+	}
+	if len(jobs) != 0 {
+		t.Errorf("want 0 jobs, got %d", len(jobs))
+	}
+}
+
+func TestListJobs_ReturnsAll(t *testing.T) {
+	mgr := newTestManager()
+	mustCreateJob(t, mgr)
+	mustCreateJob(t, mgr)
+
+	jobs, err := mgr.ListJobs(context.Background(), testAgencyID, JobFilter{})
+	if err != nil {
+		t.Fatalf("ListJobs: %v", err)
+	}
+	if len(jobs) != 2 {
+		t.Errorf("want 2 jobs, got %d", len(jobs))
+	}
+}
+
+func TestListJobs_FilterByStatus(t *testing.T) {
+	mgr := newTestManager()
+	job := mustCreateJob(t, mgr)
+	_, _ = mgr.StartJob(context.Background(), testAgencyID, job.ID)
+	mustCreateJob(t, mgr) // stays pending
+
+	running, err := mgr.ListJobs(context.Background(), testAgencyID, JobFilter{Status: JobStatusRunning})
+	if err != nil {
+		t.Fatalf("ListJobs: %v", err)
+	}
+	if len(running) != 1 {
+		t.Errorf("want 1 running job, got %d", len(running))
+	}
+}
+
 // ── GetJob ────────────────────────────────────────────────────────────────────
 
 func TestGetJob_NotFound(t *testing.T) {

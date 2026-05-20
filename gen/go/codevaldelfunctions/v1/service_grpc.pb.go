@@ -7,7 +7,10 @@
 package codevaldelfunctionsv1
 
 import (
+	context "context"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -15,13 +18,27 @@ import (
 // Requires gRPC-Go v1.64.0 or later.
 const _ = grpc.SupportPackageIsVersion9
 
+const (
+	FunctionsService_ListJobs_FullMethodName  = "/codevaldelfunctions.v1.FunctionsService/ListJobs"
+	FunctionsService_GetJob_FullMethodName    = "/codevaldelfunctions.v1.FunctionsService/GetJob"
+	FunctionsService_CancelJob_FullMethodName = "/codevaldelfunctions.v1.FunctionsService/CancelJob"
+)
+
 // FunctionsServiceClient is the client API for FunctionsService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
 // FunctionsService exposes job management for CodeValdFunctions.
-// Job query and cancel RPCs are added in MVP-FN-006 (ListJobs, GetJob, CancelJob).
 type FunctionsServiceClient interface {
+	// ListJobs returns all jobs for an agency, optionally filtered by status or function name.
+	ListJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error)
+	// GetJob returns a single job by ID.
+	// Error: NOT_FOUND if the job does not exist.
+	GetJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*GetJobResponse, error)
+	// CancelJob cancels a pending or running job.
+	// Error: NOT_FOUND if the job does not exist.
+	// Error: FAILED_PRECONDITION if the job is in a terminal state.
+	CancelJob(ctx context.Context, in *CancelJobRequest, opts ...grpc.CallOption) (*CancelJobResponse, error)
 }
 
 type functionsServiceClient struct {
@@ -32,13 +49,51 @@ func NewFunctionsServiceClient(cc grpc.ClientConnInterface) FunctionsServiceClie
 	return &functionsServiceClient{cc}
 }
 
+func (c *functionsServiceClient) ListJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListJobsResponse)
+	err := c.cc.Invoke(ctx, FunctionsService_ListJobs_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *functionsServiceClient) GetJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*GetJobResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetJobResponse)
+	err := c.cc.Invoke(ctx, FunctionsService_GetJob_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *functionsServiceClient) CancelJob(ctx context.Context, in *CancelJobRequest, opts ...grpc.CallOption) (*CancelJobResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CancelJobResponse)
+	err := c.cc.Invoke(ctx, FunctionsService_CancelJob_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FunctionsServiceServer is the server API for FunctionsService service.
 // All implementations must embed UnimplementedFunctionsServiceServer
 // for forward compatibility.
 //
 // FunctionsService exposes job management for CodeValdFunctions.
-// Job query and cancel RPCs are added in MVP-FN-006 (ListJobs, GetJob, CancelJob).
 type FunctionsServiceServer interface {
+	// ListJobs returns all jobs for an agency, optionally filtered by status or function name.
+	ListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error)
+	// GetJob returns a single job by ID.
+	// Error: NOT_FOUND if the job does not exist.
+	GetJob(context.Context, *GetJobRequest) (*GetJobResponse, error)
+	// CancelJob cancels a pending or running job.
+	// Error: NOT_FOUND if the job does not exist.
+	// Error: FAILED_PRECONDITION if the job is in a terminal state.
+	CancelJob(context.Context, *CancelJobRequest) (*CancelJobResponse, error)
 	mustEmbedUnimplementedFunctionsServiceServer()
 }
 
@@ -49,6 +104,15 @@ type FunctionsServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedFunctionsServiceServer struct{}
 
+func (UnimplementedFunctionsServiceServer) ListJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListJobs not implemented")
+}
+func (UnimplementedFunctionsServiceServer) GetJob(context.Context, *GetJobRequest) (*GetJobResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetJob not implemented")
+}
+func (UnimplementedFunctionsServiceServer) CancelJob(context.Context, *CancelJobRequest) (*CancelJobResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method CancelJob not implemented")
+}
 func (UnimplementedFunctionsServiceServer) mustEmbedUnimplementedFunctionsServiceServer() {}
 func (UnimplementedFunctionsServiceServer) testEmbeddedByValue()                          {}
 
@@ -70,13 +134,80 @@ func RegisterFunctionsServiceServer(s grpc.ServiceRegistrar, srv FunctionsServic
 	s.RegisterService(&FunctionsService_ServiceDesc, srv)
 }
 
+func _FunctionsService_ListJobs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListJobsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FunctionsServiceServer).ListJobs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FunctionsService_ListJobs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FunctionsServiceServer).ListJobs(ctx, req.(*ListJobsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FunctionsService_GetJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetJobRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FunctionsServiceServer).GetJob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FunctionsService_GetJob_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FunctionsServiceServer).GetJob(ctx, req.(*GetJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _FunctionsService_CancelJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CancelJobRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FunctionsServiceServer).CancelJob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FunctionsService_CancelJob_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FunctionsServiceServer).CancelJob(ctx, req.(*CancelJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // FunctionsService_ServiceDesc is the grpc.ServiceDesc for FunctionsService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var FunctionsService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "codevaldelfunctions.v1.FunctionsService",
 	HandlerType: (*FunctionsServiceServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams:     []grpc.StreamDesc{},
-	Metadata:    "codevaldelfunctions/v1/service.proto",
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ListJobs",
+			Handler:    _FunctionsService_ListJobs_Handler,
+		},
+		{
+			MethodName: "GetJob",
+			Handler:    _FunctionsService_GetJob_Handler,
+		},
+		{
+			MethodName: "CancelJob",
+			Handler:    _FunctionsService_CancelJob_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "codevaldelfunctions/v1/service.proto",
 }

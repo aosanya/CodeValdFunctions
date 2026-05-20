@@ -73,6 +73,30 @@ func (m *functionsManager) GetJob(ctx context.Context, agencyID, jobID string) (
 	return jobFromEntity(entity), nil
 }
 
+// ListJobs returns all Job entities for the agency, optionally filtered.
+func (m *functionsManager) ListJobs(ctx context.Context, agencyID string, filter JobFilter) ([]Job, error) {
+	props := map[string]any{}
+	if filter.Status != "" {
+		props["status"] = string(filter.Status)
+	}
+	if filter.FunctionName != "" {
+		props["function_name"] = filter.FunctionName
+	}
+	entities, err := m.dm.ListEntities(ctx, entitygraph.EntityFilter{
+		AgencyID:   agencyID,
+		TypeID:     jobTypeID,
+		Properties: props,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("ListJobs: %w", err)
+	}
+	jobs := make([]Job, len(entities))
+	for i, e := range entities {
+		jobs[i] = jobFromEntity(e)
+	}
+	return jobs, nil
+}
+
 // StartJob transitions a Job from pending or retrying → running.
 func (m *functionsManager) StartJob(ctx context.Context, agencyID, jobID string) (Job, error) {
 	job, err := m.GetJob(ctx, agencyID, jobID)

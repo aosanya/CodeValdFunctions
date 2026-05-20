@@ -10,6 +10,7 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
+	sync "sync"
 	unsafe "unsafe"
 )
 
@@ -20,20 +21,564 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Job represents a single function execution triggered by a platform event.
+type Job struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Id             string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	AgencyId       string                 `protobuf:"bytes,2,opt,name=agency_id,json=agencyId,proto3" json:"agency_id,omitempty"`
+	Status         string                 `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
+	FunctionName   string                 `protobuf:"bytes,4,opt,name=function_name,json=functionName,proto3" json:"function_name,omitempty"`
+	TriggerEvent   string                 `protobuf:"bytes,5,opt,name=trigger_event,json=triggerEvent,proto3" json:"trigger_event,omitempty"`
+	TriggerPayload string                 `protobuf:"bytes,6,opt,name=trigger_payload,json=triggerPayload,proto3" json:"trigger_payload,omitempty"`
+	Result         string                 `protobuf:"bytes,7,opt,name=result,proto3" json:"result,omitempty"`
+	Error          string                 `protobuf:"bytes,8,opt,name=error,proto3" json:"error,omitempty"`
+	RetryCount     int32                  `protobuf:"varint,9,opt,name=retry_count,json=retryCount,proto3" json:"retry_count,omitempty"`
+	CreatedAt      string                 `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	StartedAt      string                 `protobuf:"bytes,11,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
+	CompletedAt    string                 `protobuf:"bytes,12,opt,name=completed_at,json=completedAt,proto3" json:"completed_at,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *Job) Reset() {
+	*x = Job{}
+	mi := &file_codevaldelfunctions_v1_service_proto_msgTypes[0]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Job) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Job) ProtoMessage() {}
+
+func (x *Job) ProtoReflect() protoreflect.Message {
+	mi := &file_codevaldelfunctions_v1_service_proto_msgTypes[0]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Job.ProtoReflect.Descriptor instead.
+func (*Job) Descriptor() ([]byte, []int) {
+	return file_codevaldelfunctions_v1_service_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *Job) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Job) GetAgencyId() string {
+	if x != nil {
+		return x.AgencyId
+	}
+	return ""
+}
+
+func (x *Job) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *Job) GetFunctionName() string {
+	if x != nil {
+		return x.FunctionName
+	}
+	return ""
+}
+
+func (x *Job) GetTriggerEvent() string {
+	if x != nil {
+		return x.TriggerEvent
+	}
+	return ""
+}
+
+func (x *Job) GetTriggerPayload() string {
+	if x != nil {
+		return x.TriggerPayload
+	}
+	return ""
+}
+
+func (x *Job) GetResult() string {
+	if x != nil {
+		return x.Result
+	}
+	return ""
+}
+
+func (x *Job) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+func (x *Job) GetRetryCount() int32 {
+	if x != nil {
+		return x.RetryCount
+	}
+	return 0
+}
+
+func (x *Job) GetCreatedAt() string {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return ""
+}
+
+func (x *Job) GetStartedAt() string {
+	if x != nil {
+		return x.StartedAt
+	}
+	return ""
+}
+
+func (x *Job) GetCompletedAt() string {
+	if x != nil {
+		return x.CompletedAt
+	}
+	return ""
+}
+
+// JobFilter narrows ListJobs results. All fields are optional.
+type JobFilter struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Status        string                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`                                 // filter by job status (e.g. "pending", "running")
+	FunctionName  string                 `protobuf:"bytes,2,opt,name=function_name,json=functionName,proto3" json:"function_name,omitempty"` // filter by the registered function name
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *JobFilter) Reset() {
+	*x = JobFilter{}
+	mi := &file_codevaldelfunctions_v1_service_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *JobFilter) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*JobFilter) ProtoMessage() {}
+
+func (x *JobFilter) ProtoReflect() protoreflect.Message {
+	mi := &file_codevaldelfunctions_v1_service_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use JobFilter.ProtoReflect.Descriptor instead.
+func (*JobFilter) Descriptor() ([]byte, []int) {
+	return file_codevaldelfunctions_v1_service_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *JobFilter) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *JobFilter) GetFunctionName() string {
+	if x != nil {
+		return x.FunctionName
+	}
+	return ""
+}
+
+type ListJobsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AgencyId      string                 `protobuf:"bytes,1,opt,name=agency_id,json=agencyId,proto3" json:"agency_id,omitempty"`
+	Filter        *JobFilter             `protobuf:"bytes,2,opt,name=filter,proto3" json:"filter,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListJobsRequest) Reset() {
+	*x = ListJobsRequest{}
+	mi := &file_codevaldelfunctions_v1_service_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListJobsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListJobsRequest) ProtoMessage() {}
+
+func (x *ListJobsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_codevaldelfunctions_v1_service_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListJobsRequest.ProtoReflect.Descriptor instead.
+func (*ListJobsRequest) Descriptor() ([]byte, []int) {
+	return file_codevaldelfunctions_v1_service_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ListJobsRequest) GetAgencyId() string {
+	if x != nil {
+		return x.AgencyId
+	}
+	return ""
+}
+
+func (x *ListJobsRequest) GetFilter() *JobFilter {
+	if x != nil {
+		return x.Filter
+	}
+	return nil
+}
+
+type ListJobsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Jobs          []*Job                 `protobuf:"bytes,1,rep,name=jobs,proto3" json:"jobs,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListJobsResponse) Reset() {
+	*x = ListJobsResponse{}
+	mi := &file_codevaldelfunctions_v1_service_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListJobsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListJobsResponse) ProtoMessage() {}
+
+func (x *ListJobsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_codevaldelfunctions_v1_service_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListJobsResponse.ProtoReflect.Descriptor instead.
+func (*ListJobsResponse) Descriptor() ([]byte, []int) {
+	return file_codevaldelfunctions_v1_service_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ListJobsResponse) GetJobs() []*Job {
+	if x != nil {
+		return x.Jobs
+	}
+	return nil
+}
+
+type GetJobRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AgencyId      string                 `protobuf:"bytes,1,opt,name=agency_id,json=agencyId,proto3" json:"agency_id,omitempty"`
+	JobId         string                 `protobuf:"bytes,2,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetJobRequest) Reset() {
+	*x = GetJobRequest{}
+	mi := &file_codevaldelfunctions_v1_service_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetJobRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetJobRequest) ProtoMessage() {}
+
+func (x *GetJobRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_codevaldelfunctions_v1_service_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetJobRequest.ProtoReflect.Descriptor instead.
+func (*GetJobRequest) Descriptor() ([]byte, []int) {
+	return file_codevaldelfunctions_v1_service_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *GetJobRequest) GetAgencyId() string {
+	if x != nil {
+		return x.AgencyId
+	}
+	return ""
+}
+
+func (x *GetJobRequest) GetJobId() string {
+	if x != nil {
+		return x.JobId
+	}
+	return ""
+}
+
+type GetJobResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Job           *Job                   `protobuf:"bytes,1,opt,name=job,proto3" json:"job,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetJobResponse) Reset() {
+	*x = GetJobResponse{}
+	mi := &file_codevaldelfunctions_v1_service_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetJobResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetJobResponse) ProtoMessage() {}
+
+func (x *GetJobResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_codevaldelfunctions_v1_service_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetJobResponse.ProtoReflect.Descriptor instead.
+func (*GetJobResponse) Descriptor() ([]byte, []int) {
+	return file_codevaldelfunctions_v1_service_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *GetJobResponse) GetJob() *Job {
+	if x != nil {
+		return x.Job
+	}
+	return nil
+}
+
+type CancelJobRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AgencyId      string                 `protobuf:"bytes,1,opt,name=agency_id,json=agencyId,proto3" json:"agency_id,omitempty"`
+	JobId         string                 `protobuf:"bytes,2,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CancelJobRequest) Reset() {
+	*x = CancelJobRequest{}
+	mi := &file_codevaldelfunctions_v1_service_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CancelJobRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CancelJobRequest) ProtoMessage() {}
+
+func (x *CancelJobRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_codevaldelfunctions_v1_service_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CancelJobRequest.ProtoReflect.Descriptor instead.
+func (*CancelJobRequest) Descriptor() ([]byte, []int) {
+	return file_codevaldelfunctions_v1_service_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *CancelJobRequest) GetAgencyId() string {
+	if x != nil {
+		return x.AgencyId
+	}
+	return ""
+}
+
+func (x *CancelJobRequest) GetJobId() string {
+	if x != nil {
+		return x.JobId
+	}
+	return ""
+}
+
+type CancelJobResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Job           *Job                   `protobuf:"bytes,1,opt,name=job,proto3" json:"job,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CancelJobResponse) Reset() {
+	*x = CancelJobResponse{}
+	mi := &file_codevaldelfunctions_v1_service_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CancelJobResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CancelJobResponse) ProtoMessage() {}
+
+func (x *CancelJobResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_codevaldelfunctions_v1_service_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CancelJobResponse.ProtoReflect.Descriptor instead.
+func (*CancelJobResponse) Descriptor() ([]byte, []int) {
+	return file_codevaldelfunctions_v1_service_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *CancelJobResponse) GetJob() *Job {
+	if x != nil {
+		return x.Job
+	}
+	return nil
+}
+
 var File_codevaldelfunctions_v1_service_proto protoreflect.FileDescriptor
 
 const file_codevaldelfunctions_v1_service_proto_rawDesc = "" +
 	"\n" +
-	"$codevaldelfunctions/v1/service.proto\x12\x16codevaldelfunctions.v12\x12\n" +
-	"\x10FunctionsServiceBZZXgithub.com/aosanya/CodeValdFunctions/gen/go/codevaldelfunctions/v1;codevaldelfunctionsv1b\x06proto3"
+	"$codevaldelfunctions/v1/service.proto\x12\x16codevaldelfunctions.v1\"\xed\x02\n" +
+	"\x03Job\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
+	"\tagency_id\x18\x02 \x01(\tR\bagencyId\x12\x16\n" +
+	"\x06status\x18\x03 \x01(\tR\x06status\x12#\n" +
+	"\rfunction_name\x18\x04 \x01(\tR\ffunctionName\x12#\n" +
+	"\rtrigger_event\x18\x05 \x01(\tR\ftriggerEvent\x12'\n" +
+	"\x0ftrigger_payload\x18\x06 \x01(\tR\x0etriggerPayload\x12\x16\n" +
+	"\x06result\x18\a \x01(\tR\x06result\x12\x14\n" +
+	"\x05error\x18\b \x01(\tR\x05error\x12\x1f\n" +
+	"\vretry_count\x18\t \x01(\x05R\n" +
+	"retryCount\x12\x1d\n" +
+	"\n" +
+	"created_at\x18\n" +
+	" \x01(\tR\tcreatedAt\x12\x1d\n" +
+	"\n" +
+	"started_at\x18\v \x01(\tR\tstartedAt\x12!\n" +
+	"\fcompleted_at\x18\f \x01(\tR\vcompletedAt\"H\n" +
+	"\tJobFilter\x12\x16\n" +
+	"\x06status\x18\x01 \x01(\tR\x06status\x12#\n" +
+	"\rfunction_name\x18\x02 \x01(\tR\ffunctionName\"i\n" +
+	"\x0fListJobsRequest\x12\x1b\n" +
+	"\tagency_id\x18\x01 \x01(\tR\bagencyId\x129\n" +
+	"\x06filter\x18\x02 \x01(\v2!.codevaldelfunctions.v1.JobFilterR\x06filter\"C\n" +
+	"\x10ListJobsResponse\x12/\n" +
+	"\x04jobs\x18\x01 \x03(\v2\x1b.codevaldelfunctions.v1.JobR\x04jobs\"C\n" +
+	"\rGetJobRequest\x12\x1b\n" +
+	"\tagency_id\x18\x01 \x01(\tR\bagencyId\x12\x15\n" +
+	"\x06job_id\x18\x02 \x01(\tR\x05jobId\"?\n" +
+	"\x0eGetJobResponse\x12-\n" +
+	"\x03job\x18\x01 \x01(\v2\x1b.codevaldelfunctions.v1.JobR\x03job\"F\n" +
+	"\x10CancelJobRequest\x12\x1b\n" +
+	"\tagency_id\x18\x01 \x01(\tR\bagencyId\x12\x15\n" +
+	"\x06job_id\x18\x02 \x01(\tR\x05jobId\"B\n" +
+	"\x11CancelJobResponse\x12-\n" +
+	"\x03job\x18\x01 \x01(\v2\x1b.codevaldelfunctions.v1.JobR\x03job2\xac\x02\n" +
+	"\x10FunctionsService\x12]\n" +
+	"\bListJobs\x12'.codevaldelfunctions.v1.ListJobsRequest\x1a(.codevaldelfunctions.v1.ListJobsResponse\x12W\n" +
+	"\x06GetJob\x12%.codevaldelfunctions.v1.GetJobRequest\x1a&.codevaldelfunctions.v1.GetJobResponse\x12`\n" +
+	"\tCancelJob\x12(.codevaldelfunctions.v1.CancelJobRequest\x1a).codevaldelfunctions.v1.CancelJobResponseBZZXgithub.com/aosanya/CodeValdFunctions/gen/go/codevaldelfunctions/v1;codevaldelfunctionsv1b\x06proto3"
 
-var file_codevaldelfunctions_v1_service_proto_goTypes = []any{}
+var (
+	file_codevaldelfunctions_v1_service_proto_rawDescOnce sync.Once
+	file_codevaldelfunctions_v1_service_proto_rawDescData []byte
+)
+
+func file_codevaldelfunctions_v1_service_proto_rawDescGZIP() []byte {
+	file_codevaldelfunctions_v1_service_proto_rawDescOnce.Do(func() {
+		file_codevaldelfunctions_v1_service_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_codevaldelfunctions_v1_service_proto_rawDesc), len(file_codevaldelfunctions_v1_service_proto_rawDesc)))
+	})
+	return file_codevaldelfunctions_v1_service_proto_rawDescData
+}
+
+var file_codevaldelfunctions_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_codevaldelfunctions_v1_service_proto_goTypes = []any{
+	(*Job)(nil),               // 0: codevaldelfunctions.v1.Job
+	(*JobFilter)(nil),         // 1: codevaldelfunctions.v1.JobFilter
+	(*ListJobsRequest)(nil),   // 2: codevaldelfunctions.v1.ListJobsRequest
+	(*ListJobsResponse)(nil),  // 3: codevaldelfunctions.v1.ListJobsResponse
+	(*GetJobRequest)(nil),     // 4: codevaldelfunctions.v1.GetJobRequest
+	(*GetJobResponse)(nil),    // 5: codevaldelfunctions.v1.GetJobResponse
+	(*CancelJobRequest)(nil),  // 6: codevaldelfunctions.v1.CancelJobRequest
+	(*CancelJobResponse)(nil), // 7: codevaldelfunctions.v1.CancelJobResponse
+}
 var file_codevaldelfunctions_v1_service_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	1, // 0: codevaldelfunctions.v1.ListJobsRequest.filter:type_name -> codevaldelfunctions.v1.JobFilter
+	0, // 1: codevaldelfunctions.v1.ListJobsResponse.jobs:type_name -> codevaldelfunctions.v1.Job
+	0, // 2: codevaldelfunctions.v1.GetJobResponse.job:type_name -> codevaldelfunctions.v1.Job
+	0, // 3: codevaldelfunctions.v1.CancelJobResponse.job:type_name -> codevaldelfunctions.v1.Job
+	2, // 4: codevaldelfunctions.v1.FunctionsService.ListJobs:input_type -> codevaldelfunctions.v1.ListJobsRequest
+	4, // 5: codevaldelfunctions.v1.FunctionsService.GetJob:input_type -> codevaldelfunctions.v1.GetJobRequest
+	6, // 6: codevaldelfunctions.v1.FunctionsService.CancelJob:input_type -> codevaldelfunctions.v1.CancelJobRequest
+	3, // 7: codevaldelfunctions.v1.FunctionsService.ListJobs:output_type -> codevaldelfunctions.v1.ListJobsResponse
+	5, // 8: codevaldelfunctions.v1.FunctionsService.GetJob:output_type -> codevaldelfunctions.v1.GetJobResponse
+	7, // 9: codevaldelfunctions.v1.FunctionsService.CancelJob:output_type -> codevaldelfunctions.v1.CancelJobResponse
+	7, // [7:10] is the sub-list for method output_type
+	4, // [4:7] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_codevaldelfunctions_v1_service_proto_init() }
@@ -47,12 +592,13 @@ func file_codevaldelfunctions_v1_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_codevaldelfunctions_v1_service_proto_rawDesc), len(file_codevaldelfunctions_v1_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   0,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_codevaldelfunctions_v1_service_proto_goTypes,
 		DependencyIndexes: file_codevaldelfunctions_v1_service_proto_depIdxs,
+		MessageInfos:      file_codevaldelfunctions_v1_service_proto_msgTypes,
 	}.Build()
 	File_codevaldelfunctions_v1_service_proto = out.File
 	file_codevaldelfunctions_v1_service_proto_goTypes = nil

@@ -25,6 +25,12 @@ const (
 	JobStatusRetrying  JobStatus = "retrying"
 )
 
+// JobFilter narrows ListJobs results. Zero values are ignored.
+type JobFilter struct {
+	Status       JobStatus // filter by status; zero means all statuses
+	FunctionName string    // filter by function name; empty means all functions
+}
+
 // Job represents a single function execution triggered by a platform event.
 type Job struct {
 	// ID is the entitygraph-assigned identifier.

@@ -11,6 +11,9 @@ type FunctionsManager interface {
 	// GetJob retrieves a single Job by ID.
 	GetJob(ctx context.Context, agencyID, jobID string) (Job, error)
 
+	// ListJobs returns all Jobs for an agency, optionally filtered.
+	ListJobs(ctx context.Context, agencyID string, filter JobFilter) ([]Job, error)
+
 	// StartJob transitions a Job from pending or retrying → running,
 	// recording started_at.
 	StartJob(ctx context.Context, agencyID, jobID string) (Job, error)

@@ -2,6 +2,7 @@ package codevaldelfunctions
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/aosanya/CodeValdSharedLib/entitygraph"
@@ -75,7 +76,20 @@ func (f *fakeDataManager) ListEntities(_ context.Context, filter entitygraph.Ent
 	defer f.mu.Unlock()
 	var result []entitygraph.Entity
 	for _, e := range f.entities {
-		if e.AgencyID == filter.AgencyID && (filter.TypeID == "" || e.TypeID == filter.TypeID) {
+		if e.AgencyID != filter.AgencyID {
+			continue
+		}
+		if filter.TypeID != "" && e.TypeID != filter.TypeID {
+			continue
+		}
+		match := true
+		for k, v := range filter.Properties {
+			if fmt.Sprintf("%v", e.Properties[k]) != fmt.Sprintf("%v", v) {
+				match = false
+				break
+			}
+		}
+		if match {
 			result = append(result, e)
 		}
 	}
