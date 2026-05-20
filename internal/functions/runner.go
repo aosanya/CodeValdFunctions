@@ -25,9 +25,10 @@ import (
 
 // FunctionManifest is the sidecar JSON file alongside each function binary.
 type FunctionManifest struct {
-	Name        string `json:"name"`
-	Trigger     string `json:"trigger"`
-	Description string `json:"description,omitempty"`
+	Name         string            `json:"name"`
+	Trigger      string            `json:"trigger"`
+	Description  string            `json:"description,omitempty"`
+	PayloadMatch map[string]string `json:"payload_match,omitempty"`
 }
 
 // Input is the JSON payload sent to a function binary on stdin.
@@ -62,8 +63,9 @@ func (r *BinaryRunner) BinaryPath(name string) string {
 }
 
 // Lookup scans the functions directory for a manifest whose trigger matches
-// triggerEvent and returns the function name and binary path.
-func (r *BinaryRunner) Lookup(triggerEvent string) (name, binaryPath string, ok bool) {
+// triggerEvent and whose payload_match qualifiers (if any) all appear in
+// payload. Returns the first match.
+func (r *BinaryRunner) Lookup(triggerEvent, payload string) (name, binaryPath string, ok bool) {
 	entries, err := os.ReadDir(r.dir)
 	if err != nil {
 		log.Printf("functions: runner: read dir %s: %v", r.dir, err)
@@ -81,12 +83,27 @@ func (r *BinaryRunner) Lookup(triggerEvent string) (name, binaryPath string, ok 
 		if err := json.Unmarshal(data, &m); err != nil || m.Trigger != triggerEvent {
 			continue
 		}
+		if !payloadMatches(payload, m.PayloadMatch) {
+			continue
+		}
 		bin := filepath.Join(r.dir, m.Name)
 		if info, err := os.Stat(bin); err == nil && !info.IsDir() {
 			return m.Name, bin, true
 		}
 	}
 	return "", "", false
+}
+
+// payloadMatches returns true when every key=value pair in required appears
+// as a literal substring in payload. An empty or nil required always matches.
+func payloadMatches(payload string, required map[string]string) bool {
+	for k, v := range required {
+		needle := `"` + k + `":"` + v + `"`
+		if !strings.Contains(payload, needle) {
+			return false
+		}
+	}
+	return true
 }
 
 // Run executes the binary at binaryPath, feeding input as JSON on stdin.

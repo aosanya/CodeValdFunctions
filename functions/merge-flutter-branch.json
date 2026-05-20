@@ -1,0 +1,8 @@
+{
+  "name": "merge-flutter-branch",
+  "trigger": "functions.job.completed",
+  "payload_match": {
+    "function_name": "compile-flutter"
+  },
+  "description": "Merges the feature branch to main when compile-flutter reports no issues. Only fires when function_name=compile-flutter appears in the event payload."
+}

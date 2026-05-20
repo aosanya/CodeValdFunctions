@@ -90,7 +90,7 @@ func NewFunctionsDispatcher(mgr codevaldelfunctions.FunctionsManager, runner *fu
 // Dispatch looks up the binary for topic, creates a Job, runs the binary,
 // then marks the Job completed or failed based on the output.
 func (d *FunctionsDispatcher) Dispatch(ctx context.Context, topic, payload string) {
-	name, binPath, ok := d.runner.Lookup(topic)
+	name, binPath, ok := d.runner.Lookup(topic, payload)
 	if !ok {
 		return
 	}

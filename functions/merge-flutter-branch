@@ -1,0 +1,153 @@
+#!/usr/bin/env python3
+"""
+merge-flutter-branch — CodeValdFunctions binary function
+
+Merges the feature branch analysed by compile-flutter back to main when
+flutter analyze reports no issues.
+
+Protocol:
+  stdin:  JSON { "job_id": "...", "agency_id": "...", "task_id": "...", "payload": "..." }
+  stdout: JSON { "status": "ok"|"error", "result": "..." }
+  exit 0 always; infrastructure errors use status="error"
+
+payload is the raw functions.job.completed event JSON:
+  { "job_id": "...", "function_name": "compile-flutter", "trigger_event": "..." }
+
+The compile-flutter result (retrieved via Cross) carries:
+  { "task_name": "...", "branch": "...", "status": "ok"|"issues-found", "output": "..." }
+
+Environment:
+  FN_GIT_CLONE_BASE   Cross base URL (e.g. http://codevaldcross:8081)
+  FN_DEFAULT_REPO     repository name (e.g. shared-farms)
+  FN_CROSS_AUTH_USER  Cross basic-auth username
+  FN_CROSS_AUTH_PASS  Cross basic-auth password
+"""
+
+import base64
+import json
+import os
+import sys
+import urllib.error
+import urllib.request
+
+
+def out(status, result="", error=""):
+    print(json.dumps({"status": status, "result": result, "error": error}))
+
+
+def fail(msg):
+    out("error", error=msg)
+    sys.exit(0)
+
+
+def auth_header():
+    u = os.environ.get("FN_CROSS_AUTH_USER", "")
+    p = os.environ.get("FN_CROSS_AUTH_PASS", "")
+    if u and p:
+        return "Basic " + base64.b64encode(f"{u}:{p}".encode()).decode()
+    return ""
+
+
+def cross_get(url):
+    req = urllib.request.Request(url)
+    h = auth_header()
+    if h:
+        req.add_header("Authorization", h)
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return json.loads(resp.read())
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"GET {url} → {e.code}: {e.read().decode()[:200]}")
+
+
+def cross_post(url, body):
+    data = json.dumps(body).encode()
+    req = urllib.request.Request(url, data=data, method="POST")
+    req.add_header("Content-Type", "application/json")
+    h = auth_header()
+    if h:
+        req.add_header("Authorization", h)
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return json.loads(resp.read())
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"POST {url} → {e.code}: {e.read().decode()[:300]}")
+
+
+def main():
+    try:
+        inp = json.load(sys.stdin)
+    except Exception as e:
+        fail(f"parse stdin: {e}")
+
+    job_id    = inp.get("job_id", "")
+    agency_id = inp.get("agency_id", "")
+
+    # The event payload carries the compile job's job_id
+    try:
+        event = json.loads(inp.get("payload", "{}"))
+    except Exception as e:
+        fail(f"parse payload: {e}")
+
+    compile_job_id = event.get("job_id", "")
+    if not compile_job_id:
+        fail("job_id missing from event payload")
+
+    cross_base = os.environ.get("FN_GIT_CLONE_BASE", "").rstrip("/")
+    repo       = os.environ.get("FN_DEFAULT_REPO", "")
+    if not cross_base or not repo:
+        fail("FN_GIT_CLONE_BASE or FN_DEFAULT_REPO not set")
+
+    # Fetch the compile job to get its result (branch, status, task_name)
+    try:
+        job_data = cross_get(f"{cross_base}/functions/{agency_id}/jobs/{compile_job_id}")
+    except RuntimeError as e:
+        fail(f"fetch compile job: {e}")
+
+    job = job_data.get("job", job_data)
+    result_str = job.get("result", "")
+    if not result_str:
+        fail(f"compile job {compile_job_id} has no result")
+
+    try:
+        result = json.loads(result_str)
+    except Exception as e:
+        fail(f"parse compile result: {e}")
+
+    branch    = result.get("branch", "")
+    task_name = result.get("task_name", "")
+    status    = result.get("status", "")
+
+    print(
+        f"merge-flutter-branch: job={job_id} compile_job={compile_job_id} "
+        f"branch={branch!r} status={status}",
+        file=sys.stderr,
+    )
+
+    if not branch or branch == "main":
+        out("ok", result=f"skipped: branch={branch!r}, nothing to merge")
+        return
+
+    if status != "ok":
+        out("ok", result=f"skipped: compile status={status!r}, not merging")
+        return
+
+    # Merge the feature branch to main
+    url = f"{cross_base}/git/{agency_id}/repositories/{repo}/branches/{branch}/merge"
+    body = {
+        "merge_into": "main",
+        "message":    f"Merge {branch} — flutter analyze passed ({task_name})",
+    }
+    try:
+        resp = cross_post(url, body)
+        out("ok", result=json.dumps({
+            "merged":    branch,
+            "task_name": task_name,
+            "response":  resp,
+        }))
+    except RuntimeError as e:
+        fail(str(e))
+
+
+if __name__ == "__main__":
+    main()

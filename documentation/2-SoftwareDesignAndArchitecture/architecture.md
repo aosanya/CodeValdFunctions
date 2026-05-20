@@ -140,10 +140,15 @@ Derived from agency step definitions at startup. Matched against manifest trigge
 
 ### Published
 
+All events carry `{ job_id, function_name, trigger_event }` in the payload so
+subscribers can qualify on `function_name` without a follow-up API call.
+
 | Topic | Trigger |
 |---|---|
+| `functions.job.created` | Job entity created |
+| `functions.job.started` | Binary begins execution |
 | `functions.job.completed` | Job transitions to `completed` |
-| `functions.job.failed` | Job transitions to `failed` |
+| `functions.job.failed` | Job transitions to `failed` after retries exhausted |
 
 ---
 
@@ -174,7 +179,17 @@ Shallow clones (`--depth=1`) are not supported by the Cross git HTTP proxy.
 
 ### compile-flutter
 
-Triggered by `work.task.completed`. Clones the `task/{task_id}` git branch,
-runs `flutter analyze --no-pub`, and returns analysis output.
+Triggered by `work.task.completed`. Clones the feature branch associated with
+the task, runs `flutter analyze --no-pub`, and returns analysis output.
 
 See [architecture-compiler.md](architecture-compiler.md).
+
+### merge-flutter-branch
+
+Triggered by `functions.job.completed` **qualified by**
+`payload_match: { "function_name": "compile-flutter" }`. Calls the CodeValdGit
+merge REST endpoint to merge the feature branch to main. Only fires when
+compile-flutter passes — the `payload_match` qualifier prevents re-triggering
+when merge-flutter-branch itself completes.
+
+See [architecture-merge.md](architecture-merge.md).

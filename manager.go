@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/aosanya/CodeValdSharedLib/entitygraph"
@@ -117,6 +118,7 @@ func (m *functionsManager) StartJob(ctx context.Context, agencyID, jobID string)
 	if err != nil {
 		return Job{}, fmt.Errorf("StartJob: %w", err)
 	}
+	m.publish(ctx, "functions.job.started", agencyID, jobID)
 	return jobFromEntity(updated), nil
 }
 
@@ -203,15 +205,24 @@ func (m *functionsManager) CancelJob(ctx context.Context, agencyID, jobID string
 	return jobFromEntity(updated), nil
 }
 
-// publish fires an event if a publisher is wired. Errors are logged but do not
-// affect the caller — the Job has already been persisted.
+// publish fires an event carrying the job's key fields so subscribers can
+// qualify on function_name without a follow-up API call.
 func (m *functionsManager) publish(ctx context.Context, topic, agencyID, jobID string) {
 	if m.pub == nil {
+		return
+	}
+	job, err := m.GetJob(ctx, agencyID, jobID)
+	if err != nil {
+		log.Printf("codevaldelfunctions: publish: GetJob %s: %v", jobID, err)
 		return
 	}
 	_ = m.pub.Publish(ctx, eventbus.Event{
 		Topic:    topic,
 		AgencyID: agencyID,
-		Payload:  map[string]string{"job_id": jobID},
+		Payload: map[string]string{
+			"job_id":        jobID,
+			"function_name": job.FunctionName,
+			"trigger_event": job.TriggerEvent,
+		},
 	})
 }

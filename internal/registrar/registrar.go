@@ -4,6 +4,7 @@ package registrar
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"time"
 
@@ -38,7 +39,7 @@ func New(
 		advertiseAddr,
 		agencyID,
 		"codevaldelfunctions",
-		[]string{"functions.job.completed", "functions.job.failed"},
+		[]string{"functions.job.created", "functions.job.started", "functions.job.completed", "functions.job.failed"},
 		[]string{"work.task.completed"},
 		functionsRoutes(),
 		pingInterval,
@@ -61,12 +62,17 @@ func (r *Registrar) Close() {
 }
 
 // Publish implements [codevaldelfunctions.CrossPublisher].
-// Errors are logged but not returned — the triggering operation is already
-// persisted.
-func (r *Registrar) Publish(_ context.Context, e eventbus.Event) error {
+func (r *Registrar) Publish(ctx context.Context, e eventbus.Event) error {
+	payload := ""
+	switch p := e.Payload.(type) {
+	case string:
+		payload = p
+	case map[string]string:
+		b, _ := json.Marshal(p)
+		payload = string(b)
+	}
 	log.Printf("registrar[codevaldelfunctions]: publish topic=%q agencyID=%q", e.Topic, e.AgencyID)
-	// TODO(MVP-FN): call OrchestratorService.Publish RPC when wired.
-	return nil
+	return r.heartbeat.Publish(ctx, e.AgencyID, e.Topic, "codevaldelfunctions", payload)
 }
 
 // functionsRoutes returns the HTTP routes CodeValdFunctions exposes via Cross.

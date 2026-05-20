@@ -1,8 +1,122 @@
-> ⚠️ **DEPRECATED** — This file was copied from CodeValdGit and describes git service internals that do not apply to CodeValdFunctions. Retained for reference only. See [architecture.md](architecture.md) for the correct CodeValdFunctions architecture.
+# CodeValdFunctions — merge-flutter-branch Function
+
+## Overview
+
+`merge-flutter-branch` is a function binary that merges the feature branch to
+`main` in CodeValdGit when `compile-flutter` reports no issues. It is a pure
+service call — no AI involved — triggered by `functions.job.completed` qualified
+by `payload_match`.
 
 ---
 
-# CodeValdFunctions — Merge Strategy
+## Trigger and Payload Qualification
+
+| Field | Value |
+|---|---|
+| Trigger topic | `functions.job.completed` |
+| `payload_match.function_name` | `compile-flutter` |
+
+The `payload_match` qualifier in the manifest means `BinaryRunner.Lookup` only
+dispatches this function when the incoming `functions.job.completed` event
+carries `"function_name":"compile-flutter"` in its JSON payload. Events where
+`function_name` is anything else (including `merge-flutter-branch` itself) do
+**not** match — preventing re-triggering without any guard code inside the binary.
+
+---
+
+## Why payload_match, not a guard inside the binary
+
+Without `payload_match`, every `functions.job.completed` event would create a
+job and run the binary. When `merge-flutter-branch` itself completes it publishes
+`functions.job.completed { function_name: "merge-flutter-branch" }`, which would
+re-trigger the binary, which would complete, publish again — an infinite chain.
+
+`payload_match` resolves this at the lookup layer: no job is ever created for
+non-qualifying events, so nothing re-publishes.
+
+---
+
+## Execution Flow
+
+```
+functions.job.completed { job_id, function_name: "compile-flutter" }
+        │
+BinaryRunner.Lookup("functions.job.completed", payload)
+  payload_match { "function_name": "compile-flutter" } → ✓ match
+        │
+Job created → merge-flutter-branch binary runs
+        │
+1. Parse payload → extract compile job_id
+2. GET /functions/{agencyId}/jobs/{compile_job_id}
+   → result: { branch, task_name, status }
+        │
+3. Guard: branch == "main" or status != "ok" → return ok/skipped
+        │
+4. POST /git/{agencyId}/repositories/{repo}/branches/{branch}/merge
+   { merge_into: "main", message: "Merge {branch} — flutter analyze passed" }
+        │
+┌───────┴──────────────────┐
+│ 2xx                       │ 4xx/5xx (conflict, missing branch, etc.)
+▼                           ▼
+{"status":"ok"}             {"status":"error","error":"..."}
+        │                           │
+CompleteJob                     FailJob → retrying → failed
+        │                           │
+functions.job.completed         functions.job.failed
+{ function_name:                { function_name:
+  "merge-flutter-branch" }        "merge-flutter-branch" }
+        ↓                               ↓
+payload_match fails —           merge-failure-diagnostics
+no function triggered           (codevaldai) diagnoses
+```
+
+---
+
+## Manifest
+
+`/opt/functions/merge-flutter-branch.json`:
+```json
+{
+  "name": "merge-flutter-branch",
+  "trigger": "functions.job.completed",
+  "payload_match": {
+    "function_name": "compile-flutter"
+  }
+}
+```
+
+---
+
+## payload_match Matching Rules
+
+`BinaryRunner.Lookup` accepts the raw event payload string alongside the topic.
+`payloadMatches` checks each key-value pair in `payload_match` as the literal
+substring `"key":"value"` in the JSON. Simple, no parsing overhead, works for
+all string scalar fields in the published event payload.
+
+---
+
+## Merge Failure Diagnostics
+
+When `merge-flutter-branch` fails, `functions.job.failed { function_name: "merge-flutter-branch" }`
+is published. The `merge-failure-diagnostics` work plan fires:
+
+- handler\_service: `codevaldai`
+- payload\_condition: `"function_name":"merge-flutter-branch"`
+- The AI fetches the failed job's error field, identifies the root cause
+  (conflict, missing branch, permissions), and logs a diagnosis
+- **No automated fix** — the developer resolves and re-triggers manually
+
+---
+
+## Published Events (all carry `{ job_id, function_name, trigger_event }`)
+
+| Topic | When |
+|---|---|
+| `functions.job.created` | Job entity created |
+| `functions.job.started` | Binary begins execution |
+| `functions.job.completed` | Merge succeeded or skipped |
+| `functions.job.failed` | Merge failed after retries |
 
 > Source: `review/review.md` (March 2026 design review)
 > Status: Defined — implementation tracked in `mvp.md` (GIT-012)
