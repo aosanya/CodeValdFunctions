@@ -8,8 +8,12 @@ Protocol:
   exit 0: job completes; exit 1: job fails (infrastructure error only)
 
 Environment:
-  FN_GIT_CLONE_BASE  base URL for git clone (e.g. http://codevaldcross:8081/git)
-  FN_DEFAULT_REPO    repository name (e.g. shared-farms)
+  FN_GIT_CLONE_BASE   base URL for Cross (e.g. http://codevaldcross:8081)
+                      git clone uses /{agencyId}/{repoName} (no /git prefix)
+                      REST APIs use /git/{agencyId}/... and /work/{agencyId}/...
+  FN_DEFAULT_REPO     repository name (e.g. shared-farms)
+  FN_CROSS_AUTH_USER  Cross basic-auth username (optional)
+  FN_CROSS_AUTH_PASS  Cross basic-auth password (optional)
 """
 
 import json
@@ -18,11 +22,57 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import urllib.request
+import urllib.error
+import base64
 
 
 def fail(msg):
     print(json.dumps({"status": "error", "error": msg}))
     sys.exit(1)
+
+
+def cross_get(url, auth_header):
+    req = urllib.request.Request(url, headers={"Authorization": auth_header} if auth_header else {})
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return json.loads(resp.read())
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"GET {url} → {e.code}: {e.read().decode()[:200]}")
+    except Exception as e:
+        raise RuntimeError(f"GET {url} → {e}")
+
+
+def find_branch(cross_base, agency_id, repo, task_id, task_name, auth_header):
+    """
+    Return the best branch name to analyze for this task.
+    Priority:
+      1. Any branch whose name contains the task code (e.g. UTIL017)
+      2. task/{task_id}
+      3. main
+    """
+    try:
+        data = cross_get(
+            f"{cross_base}/git/{agency_id}/repositories/{repo}/branches",
+            auth_header,
+        )
+        branches = data.get("branches", [])
+        names = [b.get("name", "") for b in branches if b.get("name")]
+
+        task_code = (task_name or "").upper()
+        if task_code:
+            for name in names:
+                if task_code in name.upper():
+                    return name
+
+        task_branch = f"task/{task_id}"
+        if task_branch in names:
+            return task_branch
+
+    except Exception as e:
+        print(f"compile-flutter: branch lookup failed: {e}", file=sys.stderr)
+
+    return "main"
 
 
 def main():
@@ -38,20 +88,44 @@ def main():
     if not task_id:
         fail("task_id missing from input")
 
-    git_base = os.environ.get("FN_GIT_CLONE_BASE", "")
-    repo     = os.environ.get("FN_DEFAULT_REPO", "")
-    if not git_base or not repo:
+    cross_base = os.environ.get("FN_GIT_CLONE_BASE", "").rstrip("/")
+    repo       = os.environ.get("FN_DEFAULT_REPO", "")
+    if not cross_base or not repo:
         fail("FN_GIT_CLONE_BASE or FN_DEFAULT_REPO not set")
 
-    branch    = f"task/{task_id}"
-    clone_url = f"{git_base.rstrip('/')}/{agency_id}/{repo}"
+    auth_user = os.environ.get("FN_CROSS_AUTH_USER", "")
+    auth_pass = os.environ.get("FN_CROSS_AUTH_PASS", "")
+    auth_header = ""
+    if auth_user and auth_pass:
+        creds = base64.b64encode(f"{auth_user}:{auth_pass}".encode()).decode()
+        auth_header = f"Basic {creds}"
 
-    print(f"compile-flutter: job={job_id} cloning {clone_url} branch={branch}", file=sys.stderr)
+    # Fetch task name for branch lookup
+    task_name = ""
+    try:
+        task_data = cross_get(
+            f"{cross_base}/work/{agency_id}/tasks/{task_id}",
+            auth_header,
+        )
+        task_name = task_data.get("task", task_data).get("taskName", "")
+    except Exception as e:
+        print(f"compile-flutter: task lookup failed: {e}", file=sys.stderr)
+
+    branch = find_branch(cross_base, agency_id, repo, task_id, task_name, auth_header)
+
+    # git clone uses the smart-HTTP route: /{agencyId}/{repoName} (no /git prefix)
+    clone_url = f"{cross_base}/{agency_id}/{repo}"
+
+    print(
+        f"compile-flutter: job={job_id} task_name={task_name} "
+        f"cloning {clone_url} branch={branch}",
+        file=sys.stderr,
+    )
 
     tmpdir = tempfile.mkdtemp(prefix="flutter-build-")
     try:
         clone = subprocess.run(
-            ["git", "clone", "--depth=1", "--branch", branch, clone_url, tmpdir],
+            ["git", "clone", "--branch", branch, clone_url, tmpdir],
             capture_output=True, text=True
         )
         if clone.returncode != 0:
@@ -68,9 +142,11 @@ def main():
         status = "ok" if analyze.returncode == 0 else "issues-found"
 
         result = json.dumps({
-            "task_id": task_id,
-            "status":  status,
-            "output":  output,
+            "task_id":  task_id,
+            "task_name": task_name,
+            "branch":   branch,
+            "status":   status,
+            "output":   output,
         })
         print(json.dumps({"status": status, "result": result}))
 

@@ -36,6 +36,7 @@ type Job struct {
 	CreatedAt      string                 `protobuf:"bytes,10,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	StartedAt      string                 `protobuf:"bytes,11,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
 	CompletedAt    string                 `protobuf:"bytes,12,opt,name=completed_at,json=completedAt,proto3" json:"completed_at,omitempty"`
+	TaskId         string                 `protobuf:"bytes,13,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -150,6 +151,13 @@ func (x *Job) GetStartedAt() string {
 func (x *Job) GetCompletedAt() string {
 	if x != nil {
 		return x.CompletedAt
+	}
+	return ""
+}
+
+func (x *Job) GetTaskId() string {
+	if x != nil {
+		return x.TaskId
 	}
 	return ""
 }
@@ -627,7 +635,7 @@ var File_codevaldelfunctions_v1_service_proto protoreflect.FileDescriptor
 
 const file_codevaldelfunctions_v1_service_proto_rawDesc = "" +
 	"\n" +
-	"$codevaldelfunctions/v1/service.proto\x12\x16codevaldelfunctions.v1\"\xed\x02\n" +
+	"$codevaldelfunctions/v1/service.proto\x12\x16codevaldelfunctions.v1\"\x86\x03\n" +
 	"\x03Job\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
 	"\tagency_id\x18\x02 \x01(\tR\bagencyId\x12\x16\n" +
@@ -644,7 +652,8 @@ const file_codevaldelfunctions_v1_service_proto_rawDesc = "" +
 	" \x01(\tR\tcreatedAt\x12\x1d\n" +
 	"\n" +
 	"started_at\x18\v \x01(\tR\tstartedAt\x12!\n" +
-	"\fcompleted_at\x18\f \x01(\tR\vcompletedAt\"H\n" +
+	"\fcompleted_at\x18\f \x01(\tR\vcompletedAt\x12\x17\n" +
+	"\atask_id\x18\r \x01(\tR\x06taskId\"H\n" +
 	"\tJobFilter\x12\x16\n" +
 	"\x06status\x18\x01 \x01(\tR\x06status\x12#\n" +
 	"\rfunction_name\x18\x02 \x01(\tR\ffunctionName\"i\n" +

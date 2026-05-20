@@ -110,6 +110,26 @@ Or when issues are found:
 
 ---
 
+## Cross URL Namespaces
+
+Two distinct URL prefixes are used when communicating with Cross from a function binary:
+
+| Use | URL pattern | Example |
+|---|---|---|
+| `git clone` / `git fetch` | `{cross_base}/{agencyId}/{repoName}` | `http://codevaldcross:8081/utility-app-builder/shared-farms` |
+| REST API (list branches, get task, etc.) | `{cross_base}/git/{agencyId}/...` | `http://codevaldcross:8081/git/utility-app-builder/repositories/...` |
+| Work API | `{cross_base}/work/{agencyId}/...` | `http://codevaldcross:8081/work/utility-app-builder/tasks/...` |
+
+The git smart HTTP routes (`/info/refs`, `/git-upload-pack`) are registered by CodeValdGit
+**without** the `/git/` prefix. Any function that needs to `git clone` must use
+`{FN_GIT_CLONE_BASE}/{agencyId}/{repoName}` where `FN_GIT_CLONE_BASE` is the bare
+Cross base URL (e.g. `http://codevaldcross:8081`), not `http://codevaldcross:8081/git`.
+
+`--depth=1` (shallow clone) is **not supported** by the Cross git HTTP proxy — use a
+full clone.
+
+---
+
 ## Environment Requirements
 
 | Requirement | Where provided |

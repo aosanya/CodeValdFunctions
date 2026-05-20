@@ -154,6 +154,22 @@ See [architecture-storage.md](architecture-storage.md).
 
 ---
 
+## Cross URL Namespaces for Function Binaries
+
+Function binaries that call Cross APIs must use the correct URL prefix — two
+namespaces co-exist under the same base URL:
+
+| Use | URL pattern |
+|---|---|
+| `git clone` / `git fetch` | `{cross_base}/{agencyId}/{repoName}` (no `/git` prefix) |
+| Git REST API | `{cross_base}/git/{agencyId}/repositories/...` |
+| Work REST API | `{cross_base}/work/{agencyId}/tasks/...` |
+
+`FN_GIT_CLONE_BASE` is the bare Cross base URL (e.g. `http://codevaldcross:8081`).
+Shallow clones (`--depth=1`) are not supported by the Cross git HTTP proxy.
+
+---
+
 ## Bundled Functions
 
 ### compile-flutter

@@ -101,6 +101,7 @@ func jobToProto(j codevaldelfunctions.Job) *pb.Job {
 		CreatedAt:      formatTime(j.CreatedAt),
 		StartedAt:      formatTime(j.StartedAt),
 		CompletedAt:    formatTime(j.CompletedAt),
+		TaskId:         j.TaskID,
 	}
 }
 

@@ -18,6 +18,7 @@ message Job {
   string created_at      = 10;
   string started_at      = 11;
   string completed_at    = 12;
+  string task_id         = 13;
 }
 
 // JobFilter narrows ListJobs results. All fields are optional.
