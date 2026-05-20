@@ -14,7 +14,10 @@
 //   - All edges → "functions_relationships" edge collection
 package codevaldelfunctions
 
-import "github.com/aosanya/CodeValdSharedLib/types"
+import (
+	"github.com/aosanya/CodeValdSharedLib/eventreceiver"
+	"github.com/aosanya/CodeValdSharedLib/types"
+)
 
 // DefaultFunctionsSchema returns the pre-delivered [types.Schema] seeded on startup.
 // The operation is idempotent — calling it multiple times with the same schema
@@ -58,6 +61,7 @@ func DefaultFunctionsSchema() types.Schema {
 					{Name: "completed_at", Type: types.PropertyTypeString},
 				},
 			},
+			eventreceiver.ReceivedEventTypeDefinition("functions"),
 		},
 	}
 }

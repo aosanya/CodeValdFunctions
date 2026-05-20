@@ -39,7 +39,7 @@ func New(
 		agencyID,
 		"codevaldelfunctions",
 		[]string{"functions.job.completed", "functions.job.failed"},
-		[]string{},
+		[]string{"work.task.completed"},
 		functionsRoutes(),
 		pingInterval,
 		pingTimeout,

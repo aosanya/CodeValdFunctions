@@ -13,11 +13,13 @@ import (
 	codevaldelfunctions "github.com/aosanya/CodeValdFunctions"
 	pb "github.com/aosanya/CodeValdFunctions/gen/go/codevaldelfunctions/v1"
 	"github.com/aosanya/CodeValdFunctions/internal/config"
+	"github.com/aosanya/CodeValdFunctions/internal/functions"
 	"github.com/aosanya/CodeValdFunctions/internal/registrar"
 	"github.com/aosanya/CodeValdFunctions/internal/server"
 	fnarangodb "github.com/aosanya/CodeValdFunctions/storage/arangodb"
 	"github.com/aosanya/CodeValdSharedLib/entitygraph"
 	healthpb "github.com/aosanya/CodeValdSharedLib/gen/go/codevaldhealth/v1"
+	sharedev1 "github.com/aosanya/CodeValdSharedLib/gen/go/codevaldshared/v1"
 	"github.com/aosanya/CodeValdSharedLib/health"
 	"github.com/aosanya/CodeValdSharedLib/serverutil"
 )
@@ -78,9 +80,16 @@ func Run(cfg config.Config) error {
 		return err
 	}
 
+	reg := functions.NewRegistry()
+	functions.RegisterAll(reg)
+
 	grpcServer, _ := serverutil.NewGRPCServer()
 	pb.RegisterFunctionsServiceServer(grpcServer, server.New(mgr))
 	healthpb.RegisterHealthServiceServer(grpcServer, health.New("codevaldelfunctions"))
+	if cfg.AgencyID != "" {
+		dispatcher := server.NewFunctionsDispatcher(mgr, reg, cfg.AgencyID)
+		sharedev1.RegisterEventReceiverServiceServer(grpcServer, server.NewEventReceiver(backend, cfg.AgencyID, dispatcher))
+	}
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
