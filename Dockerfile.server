@@ -57,7 +57,7 @@ COPY --from=gobuild /codevaldelfunctions-server /codevaldelfunctions-server
 
 # Bundled function binaries and manifests (hot-replaceable at runtime via DeployFunction RPC)
 COPY CodeValdFunctions/functions/ /opt/functions/
-RUN chmod +x /opt/functions/compile-flutter
+RUN chmod +x /opt/functions/compile-flutter /opt/functions/merge-flutter-branch
 
 ENV PATH="/opt/flutter/bin:${PATH}"
 ENV FLUTTER_ROOT="/opt/flutter"
