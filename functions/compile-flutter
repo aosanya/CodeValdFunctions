@@ -43,14 +43,19 @@ def cross_get(url, auth_header):
         raise RuntimeError(f"GET {url} → {e}")
 
 
-def find_branch(cross_base, agency_id, repo, task_id, task_name, auth_header):
+def find_branch(cross_base, agency_id, repo, task_id, task_name, auth_header, branch_name=""):
     """
     Return the best branch name to analyze for this task.
     Priority:
-      1. Any branch whose name contains the task code (e.g. UTIL017)
-      2. task/{task_id}
-      3. main
+      1. task.branchName (set by the AI via work.task.update after branch creation)
+      2. Any branch whose name contains the task code (e.g. UTIL017)
+      3. task/{task_id}
+      4. main
     """
+    # Priority 1: use the task's explicit branch name if available.
+    if branch_name and branch_name != "main":
+        return branch_name
+
     try:
         data = cross_get(
             f"{cross_base}/git/{agency_id}/repositories/{repo}/branches",
@@ -100,18 +105,21 @@ def main():
         creds = base64.b64encode(f"{auth_user}:{auth_pass}".encode()).decode()
         auth_header = f"Basic {creds}"
 
-    # Fetch task name for branch lookup
+    # Fetch task name and branch name for branch lookup
     task_name = ""
+    task_branch_name = ""
     try:
         task_data = cross_get(
             f"{cross_base}/work/{agency_id}/tasks/{task_id}",
             auth_header,
         )
-        task_name = task_data.get("task", task_data).get("taskName", "")
+        task_obj = task_data.get("task", task_data)
+        task_name = task_obj.get("taskName", "")
+        task_branch_name = task_obj.get("branchName", "")
     except Exception as e:
         print(f"compile-flutter: task lookup failed: {e}", file=sys.stderr)
 
-    branch = find_branch(cross_base, agency_id, repo, task_id, task_name, auth_header)
+    branch = find_branch(cross_base, agency_id, repo, task_id, task_name, auth_header, task_branch_name)
 
     # git clone uses the smart-HTTP route: /{agencyId}/{repoName} (no /git prefix)
     clone_url = f"{cross_base}/{agency_id}/{repo}"
