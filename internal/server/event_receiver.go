@@ -95,7 +95,9 @@ func (d *FunctionsDispatcher) Dispatch(ctx context.Context, topic, payload strin
 		return
 	}
 
-	var meta struct{ TaskID string }
+	var meta struct {
+		TaskID string `json:"task_id"`
+	}
 	_ = json.Unmarshal([]byte(payload), &meta)
 
 	job, err := d.mgr.CreateJob(ctx, d.agencyID, name, topic, payload, meta.TaskID)

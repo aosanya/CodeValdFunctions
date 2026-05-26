@@ -139,9 +139,18 @@ def main():
         if clone.returncode != 0:
             fail(f"git clone failed for branch {branch}: {clone.stderr.strip()}")
 
+        print(f"compile-flutter: running flutter pub get in {tmpdir}", file=sys.stderr)
+        pub_get = subprocess.run(
+            ["flutter", "pub", "get"],
+            cwd=tmpdir,
+            capture_output=True, text=True
+        )
+        if pub_get.returncode != 0:
+            print(f"compile-flutter: flutter pub get failed (non-fatal): {pub_get.stderr.strip()[:200]}", file=sys.stderr)
+
         print(f"compile-flutter: running flutter analyze in {tmpdir}", file=sys.stderr)
         analyze = subprocess.run(
-            ["flutter", "analyze", "--no-pub"],
+            ["flutter", "analyze"],
             cwd=tmpdir,
             capture_output=True, text=True
         )
