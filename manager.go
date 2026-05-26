@@ -1,4 +1,4 @@
-package codevaldelfunctions
+package codevaldfunctions
 
 import (
 	"context"
@@ -213,7 +213,7 @@ func (m *functionsManager) publish(ctx context.Context, topic, agencyID, jobID s
 	}
 	job, err := m.GetJob(ctx, agencyID, jobID)
 	if err != nil {
-		log.Printf("codevaldelfunctions: publish: GetJob %s: %v", jobID, err)
+		log.Printf("codevaldfunctions: publish: GetJob %s: %v", jobID, err)
 		return
 	}
 	_ = m.pub.Publish(ctx, eventbus.Event{

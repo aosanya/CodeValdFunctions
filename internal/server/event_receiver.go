@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	codevaldelfunctions "github.com/aosanya/CodeValdFunctions"
+	codevaldfunctions "github.com/aosanya/CodeValdFunctions"
 	"github.com/aosanya/CodeValdFunctions/internal/functions"
 	"github.com/aosanya/CodeValdSharedLib/entitygraph"
 	sharedev1 "github.com/aosanya/CodeValdSharedLib/gen/go/codevaldshared/v1"
@@ -44,7 +44,7 @@ func (s *EventReceiverServer) NotifyEvent(ctx context.Context, req *sharedev1.No
 			},
 		})
 		if err == nil && len(existing) > 0 {
-			log.Printf("codevaldelfunctions: NotifyEvent: duplicate event_id=%s topic=%s — skipping", eventID, req.GetTopic())
+			log.Printf("codevaldfunctions: NotifyEvent: duplicate event_id=%s topic=%s — skipping", eventID, req.GetTopic())
 			return &sharedev1.NotifyEventResponse{}, nil
 		}
 	}
@@ -62,10 +62,10 @@ func (s *EventReceiverServer) NotifyEvent(ctx context.Context, req *sharedev1.No
 		},
 	})
 	if err != nil {
-		log.Printf("codevaldelfunctions: NotifyEvent: write ReceivedEvent: %v", err)
+		log.Printf("codevaldfunctions: NotifyEvent: write ReceivedEvent: %v", err)
 		return nil, status.Errorf(codes.Internal, "log received event: %v", err)
 	}
-	log.Printf("codevaldelfunctions: NotifyEvent: ACK event_id=%s topic=%s source=%s",
+	log.Printf("codevaldfunctions: NotifyEvent: ACK event_id=%s topic=%s source=%s",
 		eventID, req.GetTopic(), req.GetSource())
 
 	if s.dispatcher != nil {
@@ -77,13 +77,13 @@ func (s *EventReceiverServer) NotifyEvent(ctx context.Context, req *sharedev1.No
 
 // FunctionsDispatcher discovers and executes function binaries when an event arrives.
 type FunctionsDispatcher struct {
-	mgr      codevaldelfunctions.FunctionsManager
+	mgr      codevaldfunctions.FunctionsManager
 	runner   *functions.BinaryRunner
 	agencyID string
 }
 
 // NewFunctionsDispatcher constructs a FunctionsDispatcher.
-func NewFunctionsDispatcher(mgr codevaldelfunctions.FunctionsManager, runner *functions.BinaryRunner, agencyID string) *FunctionsDispatcher {
+func NewFunctionsDispatcher(mgr codevaldfunctions.FunctionsManager, runner *functions.BinaryRunner, agencyID string) *FunctionsDispatcher {
 	return &FunctionsDispatcher{mgr: mgr, runner: runner, agencyID: agencyID}
 }
 
@@ -102,13 +102,13 @@ func (d *FunctionsDispatcher) Dispatch(ctx context.Context, topic, payload strin
 
 	job, err := d.mgr.CreateJob(ctx, d.agencyID, name, topic, payload, meta.TaskID)
 	if err != nil {
-		log.Printf("codevaldelfunctions: Dispatch: CreateJob topic=%s: %v", topic, err)
+		log.Printf("codevaldfunctions: Dispatch: CreateJob topic=%s: %v", topic, err)
 		return
 	}
 
 	job, err = d.mgr.StartJob(ctx, d.agencyID, job.ID)
 	if err != nil {
-		log.Printf("codevaldelfunctions: Dispatch: StartJob job=%s: %v", job.ID, err)
+		log.Printf("codevaldfunctions: Dispatch: StartJob job=%s: %v", job.ID, err)
 		return
 	}
 
@@ -119,21 +119,21 @@ func (d *FunctionsDispatcher) Dispatch(ctx context.Context, topic, payload strin
 		Payload:  payload,
 	})
 	if runErr != nil {
-		log.Printf("codevaldelfunctions: Dispatch: run binary job=%s: %v", job.ID, runErr)
+		log.Printf("codevaldfunctions: Dispatch: run binary job=%s: %v", job.ID, runErr)
 		if _, err := d.mgr.FailJob(ctx, d.agencyID, job.ID, runErr.Error()); err != nil {
-			log.Printf("codevaldelfunctions: Dispatch: FailJob job=%s: %v", job.ID, err)
+			log.Printf("codevaldfunctions: Dispatch: FailJob job=%s: %v", job.ID, err)
 		}
 		return
 	}
 
 	if out.Status == "error" {
 		if _, err := d.mgr.FailJob(ctx, d.agencyID, job.ID, out.Error); err != nil {
-			log.Printf("codevaldelfunctions: Dispatch: FailJob job=%s: %v", job.ID, err)
+			log.Printf("codevaldfunctions: Dispatch: FailJob job=%s: %v", job.ID, err)
 		}
 		return
 	}
 
 	if _, err := d.mgr.CompleteJob(ctx, d.agencyID, job.ID, out.Result); err != nil {
-		log.Printf("codevaldelfunctions: Dispatch: CompleteJob job=%s: %v", job.ID, err)
+		log.Printf("codevaldfunctions: Dispatch: CompleteJob job=%s: %v", job.ID, err)
 	}
 }

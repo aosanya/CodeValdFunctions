@@ -1,4 +1,4 @@
-package codevaldelfunctions
+package codevaldfunctions
 
 import (
 	"context"

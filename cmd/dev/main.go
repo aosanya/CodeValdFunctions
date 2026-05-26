@@ -13,12 +13,12 @@ import (
 )
 
 func main() {
-	setDefault("CODEVALDELFUNCTIONS_GRPC_PORT", "50062")
+	setDefault("CODEVALDFUNCTIONS_GRPC_PORT", "50062")
 	setDefault("FN_ARANGO_ENDPOINT", "http://localhost:8529")
 
-	log.Println("codevaldelfunctions[dev]: starting with local-dev defaults")
+	log.Println("codevaldfunctions[dev]: starting with local-dev defaults")
 	if err := app.Run(config.Load()); err != nil {
-		log.Fatalf("codevaldelfunctions[dev]: %v", err)
+		log.Fatalf("codevaldfunctions[dev]: %v", err)
 	}
 }
 

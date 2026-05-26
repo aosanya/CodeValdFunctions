@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package codevaldelfunctions.v1;
+package codevaldfunctions.v1;
 
-option go_package = "github.com/aosanya/CodeValdFunctions/gen/go/codevaldelfunctions/v1;codevaldelfunctionsv1";
+option go_package = "github.com/aosanya/CodeValdFunctions/gen/go/codevaldfunctions/v1;codevaldfunctionsv1";
 
 // Job represents a single function execution triggered by a platform event.
 message Job {

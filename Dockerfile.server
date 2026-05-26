@@ -5,7 +5,7 @@
 # which only resolves when SharedLib is present on disk at build time.
 #
 # Invoked from Deployment/local/docker-compose.yml as:
-#   docker compose build codevaldelfunctions
+#   docker compose build codevaldfunctions
 
 # ── Stage 1: Go build ─────────────────────────────────────────────────────────
 FROM golang:1.25-alpine AS gobuild
@@ -22,7 +22,7 @@ RUN go mod download
 
 # Copy the rest of the source and build the server binary.
 COPY CodeValdFunctions/ ./
-RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -o /codevaldelfunctions-server ./cmd/server
+RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -o /codevaldfunctions-server ./cmd/server
 
 # ── Stage 2: Flutter SDK ──────────────────────────────────────────────────────
 FROM debian:bookworm-slim AS fluttersdk
@@ -53,7 +53,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=fluttersdk /opt/flutter /opt/flutter
-COPY --from=gobuild /codevaldelfunctions-server /codevaldelfunctions-server
+COPY --from=gobuild /codevaldfunctions-server /codevaldfunctions-server
 
 # Bundled function binaries and manifests (hot-replaceable at runtime via DeployFunction RPC)
 COPY CodeValdFunctions/functions/ /opt/functions/
@@ -62,7 +62,7 @@ RUN chmod +x /opt/functions/compile-flutter /opt/functions/merge-flutter-branch
 ENV PATH="/opt/flutter/bin:${PATH}"
 ENV FLUTTER_ROOT="/opt/flutter"
 
-# gRPC port — value set by CODEVALDELFUNCTIONS_GRPC_PORT at runtime
+# gRPC port — value set by CODEVALDFUNCTIONS_GRPC_PORT at runtime
 EXPOSE 50065
 
-ENTRYPOINT ["/codevaldelfunctions-server"]
+ENTRYPOINT ["/codevaldfunctions-server"]

@@ -1,5 +1,5 @@
-// Package codevaldelfunctions implements the CodeValdFunctions gRPC service.
-package codevaldelfunctions
+// Package codevaldfunctions implements the CodeValdFunctions gRPC service.
+package codevaldfunctions
 
 import "errors"
 

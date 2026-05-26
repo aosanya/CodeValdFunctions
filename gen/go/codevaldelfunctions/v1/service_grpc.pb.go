@@ -2,12 +2,13 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.2
 // - protoc             (unknown)
-// source: codevaldelfunctions/v1/service.proto
+// source: codevaldfunctions/v1/service.proto
 
-package codevaldelfunctionsv1
+package codevaldfunctionsv1
 
 import (
 	context "context"
+
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -19,10 +20,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	FunctionsService_ListJobs_FullMethodName       = "/codevaldelfunctions.v1.FunctionsService/ListJobs"
-	FunctionsService_GetJob_FullMethodName         = "/codevaldelfunctions.v1.FunctionsService/GetJob"
-	FunctionsService_CancelJob_FullMethodName      = "/codevaldelfunctions.v1.FunctionsService/CancelJob"
-	FunctionsService_DeployFunction_FullMethodName = "/codevaldelfunctions.v1.FunctionsService/DeployFunction"
+	FunctionsService_ListJobs_FullMethodName       = "/codevaldfunctions.v1.FunctionsService/ListJobs"
+	FunctionsService_GetJob_FullMethodName         = "/codevaldfunctions.v1.FunctionsService/GetJob"
+	FunctionsService_CancelJob_FullMethodName      = "/codevaldfunctions.v1.FunctionsService/CancelJob"
+	FunctionsService_DeployFunction_FullMethodName = "/codevaldfunctions.v1.FunctionsService/DeployFunction"
 )
 
 // FunctionsServiceClient is the client API for FunctionsService service.
@@ -232,7 +233,7 @@ func _FunctionsService_DeployFunction_Handler(srv interface{}, ctx context.Conte
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var FunctionsService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "codevaldelfunctions.v1.FunctionsService",
+	ServiceName: "codevaldfunctions.v1.FunctionsService",
 	HandlerType: (*FunctionsServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -253,5 +254,5 @@ var FunctionsService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "codevaldelfunctions/v1/service.proto",
+	Metadata: "codevaldfunctions/v1/service.proto",
 }

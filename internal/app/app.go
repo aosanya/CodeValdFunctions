@@ -10,8 +10,8 @@ import (
 	"syscall"
 	"time"
 
-	codevaldelfunctions "github.com/aosanya/CodeValdFunctions"
-	pb "github.com/aosanya/CodeValdFunctions/gen/go/codevaldelfunctions/v1"
+	codevaldfunctions "github.com/aosanya/CodeValdFunctions"
+	pb "github.com/aosanya/CodeValdFunctions/gen/go/codevaldfunctions/v1"
 	"github.com/aosanya/CodeValdFunctions/internal/config"
 	"github.com/aosanya/CodeValdFunctions/internal/functions"
 	"github.com/aosanya/CodeValdFunctions/internal/registrar"
@@ -30,7 +30,7 @@ func Run(cfg config.Config) error {
 	defer cancel()
 
 	// ── Cross registrar (optional) ───────────────────────────────────────────
-	var pub codevaldelfunctions.CrossPublisher
+	var pub codevaldfunctions.CrossPublisher
 	if cfg.CrossGRPCAddr != "" {
 		reg, err := registrar.New(
 			cfg.CrossGRPCAddr,
@@ -40,14 +40,14 @@ func Run(cfg config.Config) error {
 			cfg.PingTimeout,
 		)
 		if err != nil {
-			log.Printf("codevaldelfunctions: registrar: failed to create: %v — continuing without registration", err)
+			log.Printf("codevaldfunctions: registrar: failed to create: %v — continuing without registration", err)
 		} else {
 			defer reg.Close()
 			go reg.Run(ctx)
 			pub = reg
 		}
 	} else {
-		log.Println("codevaldelfunctions: CROSS_GRPC_ADDR not set — skipping CodeValdCross registration")
+		log.Println("codevaldfunctions: CROSS_GRPC_ADDR not set — skipping CodeValdCross registration")
 	}
 
 	// ── ArangoDB backend ─────────────────────────────────────────────────────
@@ -56,7 +56,7 @@ func Run(cfg config.Config) error {
 		Username: cfg.ArangoUser,
 		Password: cfg.ArangoPassword,
 		Database: cfg.ArangoDatabase,
-		Schema:   codevaldelfunctions.DefaultFunctionsSchema(),
+		Schema:   codevaldfunctions.DefaultFunctionsSchema(),
 	})
 	if err != nil {
 		return err
@@ -65,15 +65,15 @@ func Run(cfg config.Config) error {
 	// ── Schema seed (idempotent on startup) ──────────────────────────────────
 	if cfg.AgencyID != "" {
 		seedCtx, seedCancel := context.WithTimeout(ctx, 10*time.Second)
-		if err := entitygraph.SeedSchema(seedCtx, backend, cfg.AgencyID, codevaldelfunctions.DefaultFunctionsSchema()); err != nil {
-			log.Printf("codevaldelfunctions: schema seed: %v", err)
+		if err := entitygraph.SeedSchema(seedCtx, backend, cfg.AgencyID, codevaldfunctions.DefaultFunctionsSchema()); err != nil {
+			log.Printf("codevaldfunctions: schema seed: %v", err)
 		}
 		seedCancel()
 	} else {
-		log.Println("codevaldelfunctions: CODEVALDELFUNCTIONS_AGENCY_ID not set — skipping schema seed")
+		log.Println("codevaldfunctions: CODEVALDFUNCTIONS_AGENCY_ID not set — skipping schema seed")
 	}
 
-	mgr := codevaldelfunctions.NewFunctionsManager(backend, pub, cfg.AgencyID)
+	mgr := codevaldfunctions.NewFunctionsManager(backend, pub, cfg.AgencyID)
 
 	lis, err := net.Listen("tcp", ":"+cfg.GRPCPort)
 	if err != nil {
@@ -81,11 +81,11 @@ func Run(cfg config.Config) error {
 	}
 
 	runner := functions.NewBinaryRunner(cfg.FunctionsDir)
-	log.Printf("codevaldelfunctions: function runner scanning %s", cfg.FunctionsDir)
+	log.Printf("codevaldfunctions: function runner scanning %s", cfg.FunctionsDir)
 
 	grpcServer, _ := serverutil.NewGRPCServer()
 	pb.RegisterFunctionsServiceServer(grpcServer, server.New(mgr, runner))
-	healthpb.RegisterHealthServiceServer(grpcServer, health.New("codevaldelfunctions"))
+	healthpb.RegisterHealthServiceServer(grpcServer, health.New("codevaldfunctions"))
 	if cfg.AgencyID != "" {
 		dispatcher := server.NewFunctionsDispatcher(mgr, runner, cfg.AgencyID)
 		sharedev1.RegisterEventReceiverServiceServer(grpcServer, server.NewEventReceiver(backend, cfg.AgencyID, dispatcher))
@@ -95,11 +95,11 @@ func Run(cfg config.Config) error {
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
 	go func() {
 		<-quit
-		log.Println("codevaldelfunctions: shutdown signal received")
+		log.Println("codevaldfunctions: shutdown signal received")
 		cancel()
 	}()
 
-	log.Printf("codevaldelfunctions: gRPC server listening on :%s", cfg.GRPCPort)
+	log.Printf("codevaldfunctions: gRPC server listening on :%s", cfg.GRPCPort)
 	serverutil.RunWithGracefulShutdown(ctx, grpcServer, lis, 30*time.Second)
 	return nil
 }

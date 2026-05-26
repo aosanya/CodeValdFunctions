@@ -13,6 +13,6 @@ import (
 
 func main() {
 	if err := app.Run(config.Load()); err != nil {
-		log.Fatalf("codevaldelfunctions: %v", err)
+		log.Fatalf("codevaldfunctions: %v", err)
 	}
 }

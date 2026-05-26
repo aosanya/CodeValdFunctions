@@ -8,20 +8,20 @@ import (
 	"log"
 	"time"
 
-	codevaldelfunctions "github.com/aosanya/CodeValdFunctions"
+	codevaldfunctions "github.com/aosanya/CodeValdFunctions"
 	"github.com/aosanya/CodeValdSharedLib/eventbus"
 	sharedregistrar "github.com/aosanya/CodeValdSharedLib/registrar"
 	"github.com/aosanya/CodeValdSharedLib/types"
 )
 
 // Registrar sends periodic heartbeat registrations to CodeValdCross and
-// implements [codevaldelfunctions.CrossPublisher] for event publishing.
+// implements [codevaldfunctions.CrossPublisher] for event publishing.
 type Registrar struct {
 	heartbeat sharedregistrar.Registrar
 }
 
 // Compile-time assertion that *Registrar implements CrossPublisher.
-var _ codevaldelfunctions.CrossPublisher = (*Registrar)(nil)
+var _ codevaldfunctions.CrossPublisher = (*Registrar)(nil)
 
 // New constructs a Registrar that heartbeats to the CodeValdCross gRPC server.
 //
@@ -38,7 +38,7 @@ func New(
 		crossAddr,
 		advertiseAddr,
 		agencyID,
-		"codevaldelfunctions",
+		"codevaldfunctions",
 		[]string{"functions.job.created", "functions.job.started", "functions.job.completed", "functions.job.failed"},
 		[]string{"work.todo.completed", "functions.job.completed"},
 		functionsRoutes(),
@@ -61,7 +61,7 @@ func (r *Registrar) Close() {
 	r.heartbeat.Close()
 }
 
-// Publish implements [codevaldelfunctions.CrossPublisher].
+// Publish implements [codevaldfunctions.CrossPublisher].
 func (r *Registrar) Publish(ctx context.Context, e eventbus.Event) error {
 	payload := ""
 	switch p := e.Payload.(type) {
@@ -71,8 +71,8 @@ func (r *Registrar) Publish(ctx context.Context, e eventbus.Event) error {
 		b, _ := json.Marshal(p)
 		payload = string(b)
 	}
-	log.Printf("registrar[codevaldelfunctions]: publish topic=%q agencyID=%q", e.Topic, e.AgencyID)
-	return r.heartbeat.Publish(ctx, e.AgencyID, e.Topic, "codevaldelfunctions", payload)
+	log.Printf("registrar[codevaldfunctions]: publish topic=%q agencyID=%q", e.Topic, e.AgencyID)
+	return r.heartbeat.Publish(ctx, e.AgencyID, e.Topic, "codevaldfunctions", payload)
 }
 
 // functionsRoutes returns the HTTP routes CodeValdFunctions exposes via Cross.
@@ -83,14 +83,14 @@ func functionsRoutes() []types.RouteInfo {
 			Method:       "GET",
 			Pattern:      "/functions/{agencyId}/jobs",
 			Capability:   "list_jobs",
-			GrpcMethod:   "/codevaldelfunctions.v1.FunctionsService/ListJobs",
+			GrpcMethod:   "/codevaldfunctions.v1.FunctionsService/ListJobs",
 			PathBindings: []types.PathBinding{agency},
 		},
 		{
 			Method:     "GET",
 			Pattern:    "/functions/{agencyId}/jobs/{jobId}",
 			Capability: "get_job",
-			GrpcMethod: "/codevaldelfunctions.v1.FunctionsService/GetJob",
+			GrpcMethod: "/codevaldfunctions.v1.FunctionsService/GetJob",
 			PathBindings: []types.PathBinding{
 				agency,
 				{URLParam: "jobId", Field: "job_id"},
@@ -100,7 +100,7 @@ func functionsRoutes() []types.RouteInfo {
 			Method:     "DELETE",
 			Pattern:    "/functions/{agencyId}/jobs/{jobId}",
 			Capability: "cancel_job",
-			GrpcMethod: "/codevaldelfunctions.v1.FunctionsService/CancelJob",
+			GrpcMethod: "/codevaldfunctions.v1.FunctionsService/CancelJob",
 			IsWrite:    true,
 			PathBindings: []types.PathBinding{
 				agency,

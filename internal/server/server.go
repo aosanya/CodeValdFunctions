@@ -5,8 +5,8 @@ import (
 	"context"
 	"errors"
 
-	codevaldelfunctions "github.com/aosanya/CodeValdFunctions"
-	pb "github.com/aosanya/CodeValdFunctions/gen/go/codevaldelfunctions/v1"
+	codevaldfunctions "github.com/aosanya/CodeValdFunctions"
+	pb "github.com/aosanya/CodeValdFunctions/gen/go/codevaldfunctions/v1"
 	"github.com/aosanya/CodeValdFunctions/internal/functions"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -15,20 +15,20 @@ import (
 // Server implements pb.FunctionsServiceServer.
 type Server struct {
 	pb.UnimplementedFunctionsServiceServer
-	mgr    codevaldelfunctions.FunctionsManager
+	mgr    codevaldfunctions.FunctionsManager
 	runner *functions.BinaryRunner
 }
 
 // New constructs a Server backed by the given FunctionsManager and BinaryRunner.
-func New(mgr codevaldelfunctions.FunctionsManager, runner *functions.BinaryRunner) *Server {
+func New(mgr codevaldfunctions.FunctionsManager, runner *functions.BinaryRunner) *Server {
 	return &Server{mgr: mgr, runner: runner}
 }
 
 // ListJobs returns all jobs for the agency, optionally filtered.
 func (s *Server) ListJobs(ctx context.Context, req *pb.ListJobsRequest) (*pb.ListJobsResponse, error) {
-	filter := codevaldelfunctions.JobFilter{}
+	filter := codevaldfunctions.JobFilter{}
 	if f := req.GetFilter(); f != nil {
-		filter.Status = codevaldelfunctions.JobStatus(f.GetStatus())
+		filter.Status = codevaldfunctions.JobStatus(f.GetStatus())
 		filter.FunctionName = f.GetFunctionName()
 	}
 	jobs, err := s.mgr.ListJobs(ctx, req.GetAgencyId(), filter)
@@ -46,7 +46,7 @@ func (s *Server) ListJobs(ctx context.Context, req *pb.ListJobsRequest) (*pb.Lis
 func (s *Server) GetJob(ctx context.Context, req *pb.GetJobRequest) (*pb.GetJobResponse, error) {
 	job, err := s.mgr.GetJob(ctx, req.GetAgencyId(), req.GetJobId())
 	if err != nil {
-		if errors.Is(err, codevaldelfunctions.ErrJobNotFound) {
+		if errors.Is(err, codevaldfunctions.ErrJobNotFound) {
 			return nil, status.Errorf(codes.NotFound, "job %q not found", req.GetJobId())
 		}
 		return nil, status.Errorf(codes.Internal, "get job: %v", err)
@@ -58,10 +58,10 @@ func (s *Server) GetJob(ctx context.Context, req *pb.GetJobRequest) (*pb.GetJobR
 func (s *Server) CancelJob(ctx context.Context, req *pb.CancelJobRequest) (*pb.CancelJobResponse, error) {
 	job, err := s.mgr.CancelJob(ctx, req.GetAgencyId(), req.GetJobId())
 	if err != nil {
-		if errors.Is(err, codevaldelfunctions.ErrJobNotFound) {
+		if errors.Is(err, codevaldfunctions.ErrJobNotFound) {
 			return nil, status.Errorf(codes.NotFound, "job %q not found", req.GetJobId())
 		}
-		if errors.Is(err, codevaldelfunctions.ErrInvalidJobTransition) {
+		if errors.Is(err, codevaldfunctions.ErrInvalidJobTransition) {
 			return nil, status.Errorf(codes.FailedPrecondition, "cancel job: %v", err)
 		}
 		return nil, status.Errorf(codes.Internal, "cancel job: %v", err)
@@ -87,7 +87,7 @@ func (s *Server) DeployFunction(ctx context.Context, req *pb.DeployFunctionReque
 	return &pb.DeployFunctionResponse{Name: req.GetName(), Path: path}, nil
 }
 
-func jobToProto(j codevaldelfunctions.Job) *pb.Job {
+func jobToProto(j codevaldfunctions.Job) *pb.Job {
 	return &pb.Job{
 		Id:             j.ID,
 		AgencyId:       j.AgencyID,

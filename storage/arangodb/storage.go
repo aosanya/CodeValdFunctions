@@ -65,7 +65,7 @@ func New(db driver.Database, schema types.Schema) (entitygraph.DataManager, enti
 // and returns a ready-to-use Backend. cfg.Database is required.
 func NewBackend(cfg Config) (*Backend, error) {
 	if cfg.Database == "" {
-		return nil, fmt.Errorf("arangodb: NewBackend: Database must be set (e.g. \"codevaldelfunctions\")")
+		return nil, fmt.Errorf("arangodb: NewBackend: Database must be set (e.g. \"codevaldfunctions\")")
 	}
 	scfg := toSharedConfig(cfg)
 	return sharedadb.NewBackend(scfg)

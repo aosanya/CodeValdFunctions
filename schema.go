@@ -1,4 +1,4 @@
-// Package codevaldelfunctions — pre-delivered schema definition.
+// Package codevaldfunctions — pre-delivered schema definition.
 //
 // This file exposes [DefaultFunctionsSchema], which returns the fixed
 // [types.Schema] for CodeValdFunctions. internal/app seeds this schema
@@ -12,7 +12,7 @@
 // Storage:
 //   - Job → "functions_entities"   document collection
 //   - All edges → "functions_relationships" edge collection
-package codevaldelfunctions
+package codevaldfunctions
 
 import (
 	"github.com/aosanya/CodeValdSharedLib/eventreceiver"
