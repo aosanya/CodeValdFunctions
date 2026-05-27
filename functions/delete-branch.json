@@ -1,0 +1,5 @@
+{
+  "name": "delete-branch",
+  "trigger": "git.branch.delete",
+  "description": "Deletes a git branch from CodeValdGit."
+}

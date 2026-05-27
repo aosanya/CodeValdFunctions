@@ -1,0 +1,5 @@
+{
+  "name": "create-branch",
+  "trigger": "git.branch.create",
+  "description": "Creates a git branch in CodeValdGit. Idempotent — if the branch already exists the function succeeds without error (create-if-not-exists)."
+}
