@@ -7,12 +7,11 @@
 package codevaldfunctionsv1
 
 import (
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
-
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -636,7 +635,7 @@ var File_codevaldfunctions_v1_service_proto protoreflect.FileDescriptor
 
 const file_codevaldfunctions_v1_service_proto_rawDesc = "" +
 	"\n" +
-	"$codevaldfunctions/v1/service.proto\x12\x16codevaldfunctions.v1\"\x86\x03\n" +
+	"\"codevaldfunctions/v1/service.proto\x12\x14codevaldfunctions.v1\"\x86\x03\n" +
 	"\x03Job\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
 	"\tagency_id\x18\x02 \x01(\tR\bagencyId\x12\x16\n" +
@@ -657,22 +656,22 @@ const file_codevaldfunctions_v1_service_proto_rawDesc = "" +
 	"\atask_id\x18\r \x01(\tR\x06taskId\"H\n" +
 	"\tJobFilter\x12\x16\n" +
 	"\x06status\x18\x01 \x01(\tR\x06status\x12#\n" +
-	"\rfunction_name\x18\x02 \x01(\tR\ffunctionName\"i\n" +
+	"\rfunction_name\x18\x02 \x01(\tR\ffunctionName\"g\n" +
 	"\x0fListJobsRequest\x12\x1b\n" +
-	"\tagency_id\x18\x01 \x01(\tR\bagencyId\x129\n" +
-	"\x06filter\x18\x02 \x01(\v2!.codevaldfunctions.v1.JobFilterR\x06filter\"C\n" +
-	"\x10ListJobsResponse\x12/\n" +
-	"\x04jobs\x18\x01 \x03(\v2\x1b.codevaldfunctions.v1.JobR\x04jobs\"C\n" +
+	"\tagency_id\x18\x01 \x01(\tR\bagencyId\x127\n" +
+	"\x06filter\x18\x02 \x01(\v2\x1f.codevaldfunctions.v1.JobFilterR\x06filter\"A\n" +
+	"\x10ListJobsResponse\x12-\n" +
+	"\x04jobs\x18\x01 \x03(\v2\x19.codevaldfunctions.v1.JobR\x04jobs\"C\n" +
 	"\rGetJobRequest\x12\x1b\n" +
 	"\tagency_id\x18\x01 \x01(\tR\bagencyId\x12\x15\n" +
-	"\x06job_id\x18\x02 \x01(\tR\x05jobId\"?\n" +
-	"\x0eGetJobResponse\x12-\n" +
-	"\x03job\x18\x01 \x01(\v2\x1b.codevaldfunctions.v1.JobR\x03job\"F\n" +
+	"\x06job_id\x18\x02 \x01(\tR\x05jobId\"=\n" +
+	"\x0eGetJobResponse\x12+\n" +
+	"\x03job\x18\x01 \x01(\v2\x19.codevaldfunctions.v1.JobR\x03job\"F\n" +
 	"\x10CancelJobRequest\x12\x1b\n" +
 	"\tagency_id\x18\x01 \x01(\tR\bagencyId\x12\x15\n" +
-	"\x06job_id\x18\x02 \x01(\tR\x05jobId\"B\n" +
-	"\x11CancelJobResponse\x12-\n" +
-	"\x03job\x18\x01 \x01(\v2\x1b.codevaldfunctions.v1.JobR\x03job\"\x9c\x01\n" +
+	"\x06job_id\x18\x02 \x01(\tR\x05jobId\"@\n" +
+	"\x11CancelJobResponse\x12+\n" +
+	"\x03job\x18\x01 \x01(\v2\x19.codevaldfunctions.v1.JobR\x03job\"\x9c\x01\n" +
 	"\x15DeployFunctionRequest\x12\x1b\n" +
 	"\tagency_id\x18\x01 \x01(\tR\bagencyId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x18\n" +
@@ -681,12 +680,12 @@ const file_codevaldfunctions_v1_service_proto_rawDesc = "" +
 	"\vdescription\x18\x05 \x01(\tR\vdescription\"@\n" +
 	"\x16DeployFunctionResponse\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
-	"\x04path\x18\x02 \x01(\tR\x04path2\x9d\x03\n" +
-	"\x10FunctionsService\x12]\n" +
-	"\bListJobs\x12'.codevaldfunctions.v1.ListJobsRequest\x1a(.codevaldfunctions.v1.ListJobsResponse\x12W\n" +
-	"\x06GetJob\x12%.codevaldfunctions.v1.GetJobRequest\x1a&.codevaldfunctions.v1.GetJobResponse\x12`\n" +
-	"\tCancelJob\x12(.codevaldfunctions.v1.CancelJobRequest\x1a).codevaldfunctions.v1.CancelJobResponse\x12o\n" +
-	"\x0eDeployFunction\x12-.codevaldfunctions.v1.DeployFunctionRequest\x1a..codevaldfunctions.v1.DeployFunctionResponseBZZXgithub.com/aosanya/CodeValdFunctions/gen/go/codevaldfunctions/v1;codevaldfunctionsv1b\x06proto3"
+	"\x04path\x18\x02 \x01(\tR\x04path2\x8d\x03\n" +
+	"\x10FunctionsService\x12Y\n" +
+	"\bListJobs\x12%.codevaldfunctions.v1.ListJobsRequest\x1a&.codevaldfunctions.v1.ListJobsResponse\x12S\n" +
+	"\x06GetJob\x12#.codevaldfunctions.v1.GetJobRequest\x1a$.codevaldfunctions.v1.GetJobResponse\x12\\\n" +
+	"\tCancelJob\x12&.codevaldfunctions.v1.CancelJobRequest\x1a'.codevaldfunctions.v1.CancelJobResponse\x12k\n" +
+	"\x0eDeployFunction\x12+.codevaldfunctions.v1.DeployFunctionRequest\x1a,.codevaldfunctions.v1.DeployFunctionResponseBVZTgithub.com/aosanya/CodeValdFunctions/gen/go/codevaldfunctions/v1;codevaldfunctionsv1b\x06proto3"
 
 var (
 	file_codevaldfunctions_v1_service_proto_rawDescOnce sync.Once

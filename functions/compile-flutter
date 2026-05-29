@@ -132,10 +132,11 @@ def main():
 
     tmpdir = tempfile.mkdtemp(prefix="flutter-build-")
     try:
-        clone = subprocess.run(
-            ["git", "clone", "--branch", branch, clone_url, tmpdir],
-            capture_output=True, text=True
-        )
+        clone_cmd = ["git", "clone", "--branch", branch]
+        if auth_header:
+            clone_cmd += ["-c", f"http.extraHeader=Authorization: {auth_header}"]
+        clone_cmd += [clone_url, tmpdir]
+        clone = subprocess.run(clone_cmd, capture_output=True, text=True)
         if clone.returncode != 0:
             fail(f"git clone failed for branch {branch}: {clone.stderr.strip()}")
 
