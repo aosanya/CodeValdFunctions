@@ -28,6 +28,7 @@ import json
 import os
 import sys
 import urllib.error
+import urllib.parse
 import urllib.request
 
 
@@ -132,8 +133,13 @@ def main():
         out("ok", result=f"skipped: compile status={status!r}, not merging")
         return
 
-    # Merge the feature branch to main
-    url = f"{cross_base}/git/{agency_id}/repositories/{repo}/branches/{branch}/merge"
+    # Merge the feature branch to main. URL-encode the branch name so that
+    # forward slashes (feature/MVP-SF-003-...) don't break Cross's path-segment
+    # router — without quoting the slash, the request becomes
+    # /branches/feature/MVP-SF-003.../merge which Cross treats as too many
+    # path segments and returns 404.
+    encoded_branch = urllib.parse.quote(branch, safe="")
+    url = f"{cross_base}/git/{agency_id}/repositories/{repo}/branches/{encoded_branch}/merge"
     body = {
         "merge_into": "main",
         "message":    f"Merge {branch} — flutter analyze passed ({task_name})",

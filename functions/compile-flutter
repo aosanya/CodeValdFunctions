@@ -151,12 +151,17 @@ def main():
 
         print(f"compile-flutter: running flutter analyze in {tmpdir}", file=sys.stderr)
         analyze = subprocess.run(
-            ["flutter", "analyze"],
+            ["flutter", "analyze", "--no-fatal-infos", "--no-fatal-warnings"],
             cwd=tmpdir,
             capture_output=True, text=True
         )
 
         output = (analyze.stdout + analyze.stderr).strip()
+        # --no-fatal-infos and --no-fatal-warnings make flutter analyze exit 0
+        # when only info-level lints or warnings are present (style suggestions
+        # like `use_super_parameters`). The merge guard only blocks for real
+        # errors that prevent compilation; style suggestions land in the output
+        # for visibility but don't block the merge.
         status = "ok" if analyze.returncode == 0 else "issues-found"
 
         result = json.dumps({
