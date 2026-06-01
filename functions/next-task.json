@@ -1,0 +1,5 @@
+{
+  "name": "next-task",
+  "trigger": "work.next.requested",
+  "description": "Queries CodeValdWork tasks, picks the top unblocked one (every outbound depends_on target in a terminal status), and assigns it to a developer-role agent. Idempotent: re-fires safely; if no task is runnable returns status=ok with an empty selection."
+}

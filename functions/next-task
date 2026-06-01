@@ -1,0 +1,203 @@
+#!/usr/bin/env python3
+"""
+next-task — CodeValdFunctions binary function
+
+Picks the next runnable task and assigns it to a developer-role agent.
+
+Selection rule:
+  1. Filter tasks to incomplete statuses (PENDING, IN_PROGRESS).
+  2. Sort ascending by taskName (deterministic).
+  3. Walk in order; return the first task whose every outbound depends_on
+     edge points to a target in a terminal status (COMPLETED, CANCELLED).
+  4. If the picked task has no assignee, PUT it to a developer-role agent.
+
+Protocol:
+  stdin:  JSON { "job_id": "...", "agency_id": "...", "task_id": "...", "payload": "..." }
+  stdout: JSON { "status": "ok"|"error", "result": "...", "error": "..." }
+
+Payload (optional JSON string):
+  { "agent_id": "developer-01" }  - override the assignee lookup
+
+Environment:
+  FN_GIT_CLONE_BASE   Cross base URL (e.g. http://codevaldcross:8081)
+  FN_CROSS_AUTH_USER  Cross basic-auth username
+  FN_CROSS_AUTH_PASS  Cross basic-auth password
+"""
+
+import base64
+import json
+import os
+import sys
+import urllib.error
+import urllib.parse
+import urllib.request
+
+
+TERMINAL   = {"TASK_STATUS_COMPLETED", "TASK_STATUS_CANCELLED", "completed", "cancelled"}
+INCOMPLETE = {"TASK_STATUS_IN_PROGRESS", "TASK_STATUS_PENDING", "in_progress", "pending"}
+DEV_ROLE   = "Developer"
+DEFAULT_AGENT_FALLBACK = "developer-01"
+
+
+def fail(msg):
+    print(json.dumps({"status": "error", "error": msg}))
+    sys.exit(0)
+
+
+def ok(result_obj):
+    print(json.dumps({"status": "ok", "result": json.dumps(result_obj)}))
+    sys.exit(0)
+
+
+def auth_header():
+    user = os.environ.get("FN_CROSS_AUTH_USER", "")
+    pw   = os.environ.get("FN_CROSS_AUTH_PASS", "")
+    if not user:
+        return ""
+    return "Basic " + base64.b64encode(f"{user}:{pw}".encode()).decode()
+
+
+def cross_request(method, url, body=None):
+    data = json.dumps(body).encode() if body is not None else None
+    req = urllib.request.Request(url, data=data, method=method)
+    hdr = auth_header()
+    if hdr:
+        req.add_header("Authorization", hdr)
+    if body is not None:
+        req.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            raw = resp.read()
+            return json.loads(raw) if raw else {}
+    except urllib.error.HTTPError as e:
+        body_text = e.read().decode()[:200] if e.fp else ""
+        raise RuntimeError(f"{method} {url} → {e.code}: {body_text}")
+    except Exception as e:
+        raise RuntimeError(f"{method} {url} → {e}")
+
+
+def list_tasks(base, agency):
+    return cross_request("GET", f"{base}/work/{agency}/tasks").get("tasks", [])
+
+
+def deps_satisfied(base, agency, task_id, by_id):
+    data = cross_request("GET", f"{base}/work/{agency}/tasks/{task_id}/depends-on")
+    edges = data.get("relationships", [])
+    for e in edges:
+        target = by_id.get(e.get("toId"))
+        if target is None or target.get("status") not in TERMINAL:
+            return False
+    return True
+
+
+def pick_developer_agent(base, agency, override_id):
+    """Return an agent record (dict) to assign to, or None.
+
+    If override_id is provided, upsert/use it. Otherwise look up an existing
+    agent with role_name=Developer; fall back to DEFAULT_AGENT_FALLBACK.
+    """
+    if override_id:
+        try:
+            r = cross_request("GET", f"{base}/work/{agency}/agents/{override_id}")
+            return r.get("agent") or r
+        except Exception:
+            pass
+        return {"id": override_id}
+
+    try:
+        listing = cross_request("GET", f"{base}/work/{agency}/agents")
+        agents = listing.get("agents", [])
+        for a in agents:
+            if (a.get("roleName") or a.get("role_name")) == DEV_ROLE:
+                return a
+    except Exception as e:
+        print(f"next-task: agent listing failed: {e}", file=sys.stderr)
+
+    # Last-resort: by-id lookup for the conventional ID
+    try:
+        r = cross_request("GET", f"{base}/work/{agency}/agents/{DEFAULT_AGENT_FALLBACK}")
+        return r.get("agent") or r
+    except Exception:
+        return None
+
+
+def assign(base, agency, task_id, agent_id):
+    cross_request(
+        "PUT",
+        f"{base}/work/{agency}/tasks/{task_id}/assignee/{urllib.parse.quote(agent_id)}",
+        body={},
+    )
+
+
+def main():
+    try:
+        inp = json.loads(sys.stdin.read() or "{}")
+    except json.JSONDecodeError as e:
+        fail(f"unparseable stdin: {e}")
+
+    agency = inp.get("agency_id") or ""
+    if not agency:
+        fail("agency_id missing from input")
+
+    base = os.environ.get("FN_GIT_CLONE_BASE", "").rstrip("/")
+    if not base:
+        fail("FN_GIT_CLONE_BASE not set")
+
+    payload = inp.get("payload") or ""
+    override_agent = ""
+    if payload:
+        try:
+            pd = json.loads(payload)
+            override_agent = pd.get("agent_id", "") or pd.get("agentId", "")
+        except json.JSONDecodeError:
+            pass
+
+    try:
+        tasks = list_tasks(base, agency)
+    except RuntimeError as e:
+        fail(str(e))
+
+    by_id = {t["id"]: t for t in tasks if "id" in t}
+    incomplete = [t for t in tasks if t.get("status") in INCOMPLETE]
+    incomplete.sort(key=lambda t: t.get("taskName", ""))
+
+    picked = None
+    for t in incomplete:
+        try:
+            if deps_satisfied(base, agency, t["id"], by_id):
+                picked = t
+                break
+        except RuntimeError as e:
+            print(f"next-task: deps check failed for {t.get('taskName')}: {e}", file=sys.stderr)
+
+    if picked is None:
+        ok({
+            "selected": None,
+            "reason": "no runnable task — every incomplete task has unmet dependencies or none exist",
+            "incomplete_count": len(incomplete),
+        })
+
+    agent = pick_developer_agent(base, agency, override_agent)
+    if agent is None or not (agent.get("id") or agent.get("agentId")):
+        fail(f"no developer-role agent found (override={override_agent!r})")
+
+    agent_id = agent.get("id") or agent.get("agentId")
+    try:
+        assign(base, agency, picked["id"], agent_id)
+    except RuntimeError as e:
+        fail(f"assign failed: {e}")
+
+    ok({
+        "selected": {
+            "id":        picked["id"],
+            "taskName":  picked.get("taskName"),
+            "title":     picked.get("title"),
+            "status":    picked.get("status"),
+        },
+        "assigned_to": agent_id,
+        "considered":  len(incomplete),
+    })
+
+
+if __name__ == "__main__":
+    main()
