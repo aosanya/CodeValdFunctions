@@ -18,6 +18,7 @@ Environment:
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -25,6 +26,9 @@ import tempfile
 import urllib.request
 import urllib.error
 import base64
+
+
+IMPORT_RE = re.compile(r"""^\s*import\s+['"]([^'"]+)['"]""", re.MULTILINE)
 
 
 def fail(msg):
@@ -78,6 +82,44 @@ def find_branch(cross_base, agency_id, repo, task_id, task_name, auth_header, br
         print(f"compile-flutter: branch lookup failed: {e}", file=sys.stderr)
 
     return "main"
+
+
+def check_imports(tree_root):
+    """
+    Walk every *.dart file under tree_root/lib and verify that each relative
+    `import 'path.dart';` resolves to an existing file. `dart:` and `package:`
+    URIs are skipped — those are resolved by pub, not the file tree.
+
+    Returns a list of human-readable error strings (one per unresolved import);
+    empty list if every relative import resolves.
+    """
+    issues = []
+    lib_dir = os.path.join(tree_root, "lib")
+    if not os.path.isdir(lib_dir):
+        return issues
+
+    for root, _, files in os.walk(lib_dir):
+        for fname in files:
+            if not fname.endswith(".dart"):
+                continue
+            fpath = os.path.join(root, fname)
+            try:
+                with open(fpath, "r", encoding="utf-8", errors="replace") as f:
+                    src = f.read()
+            except Exception:
+                continue
+            for uri in IMPORT_RE.findall(src):
+                if uri.startswith("dart:") or uri.startswith("package:"):
+                    continue
+                target = os.path.normpath(os.path.join(os.path.dirname(fpath), uri))
+                if not os.path.isfile(target):
+                    rel_src = os.path.relpath(fpath, tree_root)
+                    rel_target = os.path.relpath(target, tree_root)
+                    issues.append(
+                        f"{rel_src}: uri_does_not_exist: '{uri}' "
+                        f"(resolved to {rel_target})"
+                    )
+    return issues
 
 
 def main():
@@ -163,6 +205,16 @@ def main():
         # errors that prevent compilation; style suggestions land in the output
         # for visibility but don't block the merge.
         status = "ok" if analyze.returncode == 0 else "issues-found"
+
+        # Independently verify every relative Dart import resolves. flutter
+        # analyze can pass on an incomplete tree (e.g. when the cloned branch
+        # is missing files that a later main.dart imports), so this check
+        # acts as a backstop on the file tree itself.
+        import_issues = check_imports(tmpdir)
+        if import_issues:
+            status = "issues-found"
+            issues_block = "\n".join(import_issues)
+            output = f"{output}\n{issues_block}".strip() if output else issues_block
 
         result = json.dumps({
             "task_id":  task_id,

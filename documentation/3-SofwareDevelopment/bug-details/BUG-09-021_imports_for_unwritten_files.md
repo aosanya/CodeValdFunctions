@@ -1,10 +1,18 @@
 # BUG-09-021 — AI emits imports for files it never writes
 
-**Status:** 📋 Open
+**Status:** ✅ Fixed — 2026-06-01
 **Severity:** Medium — code on `main` doesn't compile in a fresh checkout
 **Owner:** CodeValdFunctions (compile-flutter verification path is the durable fix); secondary fix in `CodeValdImplementations/Agencies/utility-app-builder/agency.json` decomposer prompt
 **Estimated effort:** ~3h (compile-flutter import-resolution check); ~30m (agency.json prompt rule)
 **Source finding:** [`/4-QA/agencies/utility-app-builder/bugs/09-mvp-sf-pipeline-findings.md`](../../../../CodeValdCross/documentation/4-QA/agencies/utility-app-builder/bugs/09-mvp-sf-pipeline-findings.md)
+
+---
+
+## Resolution
+
+**Primary fix (CodeValdFunctions, `functions/compile-flutter`):** added `check_imports(tree_root)` that walks `lib/**/*.dart` after `flutter analyze`, resolves each relative `import 'path.dart';` against the cloned tree, and skips `dart:` / `package:` URIs. Any unresolved import flips status to `issues-found` and the per-file `uri_does_not_exist` lines are appended to `output`. Verified against a synthetic repro (`main.dart` importing one file that exists and one that doesn't) — the missing one is correctly flagged and disappears once the file is created.
+
+**Belt-and-braces fix (CodeValdImplementations):** already in place. `agency.json` decomposer prompt at line 448 contains `RULE IMPORT-CLOSURE` (every Dart import must be a `dart:` core, a pubspec package, or a file from an EARLIER ordinality todo) and the executor at line 460 has `RULE NO-EXTRA-IMPORTS`. No change needed.
 
 ---
 
