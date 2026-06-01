@@ -23,9 +23,12 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
+import urllib.parse
 import urllib.request
 import urllib.error
 import base64
+from datetime import datetime, timedelta, timezone
 
 
 IMPORT_RE = re.compile(r"""^\s*import\s+['"]([^'"]+)['"]""", re.MULTILINE)
@@ -122,6 +125,56 @@ def check_imports(tree_root):
     return issues
 
 
+def pubsub_expected_paths(cross_base, agency_id, branch, after_iso, auth_header):
+    """
+    Query CodeValdPubSub for git.file.written events on `branch` since
+    `after_iso` (RFC3339) and return the set of paths CodeValdGit reports as
+    written. Defensive check for BUG-09-020 Phase 3: even with Phase 1's
+    per-agency lock and Phase 2's dispatcher gate, a clone that disagrees
+    with the event log is treated as an infrastructure error rather than a
+    code issue.
+
+    Returns the set of paths; an empty set on any query/parse failure (the
+    caller treats that as "no defensive check available" and proceeds).
+    """
+    query = urllib.parse.urlencode({
+        "topic":           "git.file.written",
+        "after_timestamp": after_iso or "",
+        "limit":           "500",
+    })
+    url = f"{cross_base}/pubsub/{agency_id}/events?{query}"
+    try:
+        data = cross_get(url, auth_header)
+    except Exception as e:
+        print(f"compile-flutter: pubsub query failed, skipping defensive check: {e}", file=sys.stderr)
+        return set()
+
+    paths = set()
+    for ev in data.get("events", []):
+        raw = ev.get("payload", "")
+        if not raw:
+            continue
+        try:
+            payload = json.loads(raw)
+        except Exception:
+            continue
+        if payload.get("branch_name") != branch:
+            continue
+        path = payload.get("path", "")
+        if path:
+            paths.add(path)
+    return paths
+
+
+def missing_from_tree(tmpdir, paths):
+    """Return the subset of `paths` that are not present as files under tmpdir."""
+    missing = []
+    for path in paths:
+        if not os.path.isfile(os.path.join(tmpdir, path)):
+            missing.append(path)
+    return missing
+
+
 def main():
     try:
         inp = json.load(sys.stdin)
@@ -150,6 +203,7 @@ def main():
     # Fetch task name and branch name for branch lookup
     task_name = ""
     task_branch_name = ""
+    task_obj = {}
     try:
         task_data = cross_get(
             f"{cross_base}/work/{agency_id}/tasks/{task_id}",
@@ -181,6 +235,49 @@ def main():
         clone = subprocess.run(clone_cmd, capture_output=True, text=True)
         if clone.returncode != 0:
             fail(f"git clone failed for branch {branch}: {clone.stderr.strip()}")
+
+        # BUG-09-020 Phase 3: cross-check the cloned tree against the
+        # git.file.written event log. If CodeValdGit told us files were
+        # written that the clone doesn't have, we're looking at a stale
+        # branch head — retry the clone once after a short delay, then
+        # fail with infrastructure-error so the merge guard treats this
+        # as a pipeline issue rather than a code defect.
+        after_iso = task_obj.get("createdAt") if isinstance(task_obj, dict) else ""
+        if not after_iso:
+            after_iso = (datetime.now(timezone.utc) - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        expected = pubsub_expected_paths(cross_base, agency_id, branch, after_iso, auth_header)
+        missing = missing_from_tree(tmpdir, expected) if expected else []
+        if missing:
+            print(
+                f"compile-flutter: clone missing {len(missing)} of {len(expected)} declared file(s); retrying after 2s — first few: {missing[:5]}",
+                file=sys.stderr,
+            )
+            time.sleep(2)
+            shutil.rmtree(tmpdir, ignore_errors=True)
+            tmpdir = tempfile.mkdtemp(prefix="flutter-build-")
+            clone_cmd = ["git", "clone", "--branch", branch]
+            if auth_header:
+                clone_cmd += ["-c", f"http.extraHeader=Authorization: {auth_header}"]
+            clone_cmd += [clone_url, tmpdir]
+            retry = subprocess.run(clone_cmd, capture_output=True, text=True)
+            if retry.returncode != 0:
+                fail(f"git clone retry failed for branch {branch}: {retry.stderr.strip()}")
+            missing = missing_from_tree(tmpdir, expected)
+            if missing:
+                err = (
+                    f"branch {branch} is missing {len(missing)} file(s) declared via "
+                    f"git.file.written even after retry — possible CodeValdGit flush race"
+                )
+                print(f"compile-flutter: {err}; missing: {missing}", file=sys.stderr)
+                result = json.dumps({
+                    "task_id":       task_id,
+                    "task_name":     task_name,
+                    "branch":        branch,
+                    "status":        "infrastructure-error",
+                    "missing_files": sorted(missing),
+                })
+                print(json.dumps({"status": "infrastructure-error", "result": result, "error": err}))
+                return
 
         print(f"compile-flutter: running flutter pub get in {tmpdir}", file=sys.stderr)
         pub_get = subprocess.run(
