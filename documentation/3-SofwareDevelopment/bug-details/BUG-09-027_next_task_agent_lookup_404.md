@@ -1,9 +1,40 @@
 # BUG-09-027 — `next-task` function 404s looking up agent by slug; PUT assignee then 404s
 
-**Status:** 📋 Open
-**Severity:** High — blocks `next-task-selector` from assigning any task even when the agent exists; entire 09 Part-G pipeline cannot start
-**Owner:** CodeValdFunctions (function logic) + possibly CodeValdWork (route shape mismatch)
+**Status:** ✅ Fixed (2026-06-01, working tree — not yet committed)
+**Severity:** High — blocked `next-task-selector` from assigning any task even when the agent existed; entire 09 Part-G pipeline could not start
+**Owner:** CodeValdWork (fixed there — `next-task` is now contract-compliant)
 **Source finding:** Hit during the 09 Part-G QA run on 2026-06-01 once [BUG-09-026](../../../../CodeValdCross/documentation/3-SofwareDevelopment/bug-details/BUG-09-026_http_publish_skips_fanout.md) was worked around with grpcurl
+
+## Resolution (2026-06-01)
+
+Fix landed in CodeValdWork (not Functions) — `GetAgent` and `AssignTask` now match the upsert PUT's slug-first semantics:
+
+- [`agent.go`](../../../../CodeValdWork/agent.go) — `GetAgent` now accepts either the entity UUID or the `agent_id` slug. UUID lookup is tried first; on NotFound it falls back to `GetAgentByAgentID`, which queries `ListEntities` filtered by `agent_id`. Added `GetAgentByAgentID` as a public method on `TaskManager` for direct slug lookups.
+- [`assignment.go`](../../../../CodeValdWork/assignment.go) — `AssignTask` now uses the resolved `agent.ID` (UUID) for both the `assigned_to` edge's `ToID` and the `work.task.assigned` payload's `AgentID`. Previously it passed through the raw URL-param string which, with a slug, would have produced a dangling edge even if GetAgent succeeded.
+- [`task.go`](../../../../CodeValdWork/task.go) — updated `TaskManager` interface doc + added `GetAgentByAgentID`.
+
+### Verification
+
+```
+$ curl ".../work/utility-app-builder/agents/developer-01" -u "$CV_AUTH"
+HTTP 200
+{ "agent": { "id":"e9494417-...", "agentId":"developer-01", "roleName":"Developer", ... } }
+
+$ curl -X POST ".../pubsub/utility-app-builder/publish" -d '{"topic":"work.next.requested",...}'
+HTTP 200 {"status":"ok"}
+
+# Poll 10s later
+$ next-task-selector picked: MVP-SF-001 (1c320ad8-...)
+  status:         TASK_STATUS_IN_PROGRESS
+  RESUME_MODE:    false
+```
+
+Three new unit tests cover the change:
+- `TestGetAgent_AcceptsSlug` — slug round-trips to the same UUID
+- `TestGetAgentByAgentID_NotFound` — slug not found returns ErrAgentNotFound
+- `TestAssignTask_AcceptsAgentSlug_EdgeUsesUUID` — assigning by slug writes an edge keyed on the resolved UUID
+
+`go test -race -short ./...` passes.
 
 ---
 
