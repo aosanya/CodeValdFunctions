@@ -29,5 +29,11 @@ Bugs in scope for CodeValdFunctions. Mirrors the `mvp.md` / `mvp_done.md` / `mvp
 
 | Bug ID | Title | Severity | Status | Depends On |
 |--------|-------|----------|--------|------------|
+| BUG-09-027 | `next-task` 404s looking up agent by slug; AssignTask 404s the same way | High | 📋 Open | [BUG-09-026](../../../CodeValdCross/documentation/3-SofwareDevelopment/bug-details/BUG-09-026_http_publish_skips_fanout.md) (must be fixed first to even reach this code path) |
 
-_No open bugs._
+### BUG-09-027 — `next-task` function 404s on agent lookup
+
+**Severity:** High — blocks `next-task-selector` from assigning any task; entire 09 Part-G pipeline cannot start
+**Detail:** [bug-details/BUG-09-027](bug-details/BUG-09-027_next_task_agent_lookup_404.md)
+
+`GET /work/{agency}/agents/developer-01` and `PUT /work/{agency}/tasks/{taskId}/assignee/developer-01` both 404 even though the upsert PUT to `/agents/developer-01` accepts the slug. Either CodeValdWork's GetAgent + AssignTask routes need to accept the slug like the upsert does, or `next-task` must resolve slug → UUID first.
