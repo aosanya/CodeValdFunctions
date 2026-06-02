@@ -522,6 +522,152 @@ func (x *CancelJobResponse) GetJob() *Job {
 	return nil
 }
 
+// RollbackByWorkflowRunRequest is the input to the CodeValdFunctions leg of
+// the WorkflowRun rollback coordinator (FEAT-20260602-004 Phase 2). The
+// coordinator in CodeValdWork calls this once per affected agency.
+type RollbackByWorkflowRunRequest struct {
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	AgencyId string                 `protobuf:"bytes,1,opt,name=agency_id,json=agencyId,proto3" json:"agency_id,omitempty"`
+	// workflow_run_id is required — a global "rollback every Job" sweep is
+	// intentionally not supported.
+	WorkflowRunId string `protobuf:"bytes,2,opt,name=workflow_run_id,json=workflowRunId,proto3" json:"workflow_run_id,omitempty"`
+	// reason is the operator-supplied rollback reason recorded on each affected
+	// Job and propagated to functions.job.cancelled / functions.job.rolled_back
+	// events.
+	Reason        string `protobuf:"bytes,3,opt,name=reason,proto3" json:"reason,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RollbackByWorkflowRunRequest) Reset() {
+	*x = RollbackByWorkflowRunRequest{}
+	mi := &file_codevaldfunctions_v1_service_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RollbackByWorkflowRunRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RollbackByWorkflowRunRequest) ProtoMessage() {}
+
+func (x *RollbackByWorkflowRunRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_codevaldfunctions_v1_service_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RollbackByWorkflowRunRequest.ProtoReflect.Descriptor instead.
+func (*RollbackByWorkflowRunRequest) Descriptor() ([]byte, []int) {
+	return file_codevaldfunctions_v1_service_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *RollbackByWorkflowRunRequest) GetAgencyId() string {
+	if x != nil {
+		return x.AgencyId
+	}
+	return ""
+}
+
+func (x *RollbackByWorkflowRunRequest) GetWorkflowRunId() string {
+	if x != nil {
+		return x.WorkflowRunId
+	}
+	return ""
+}
+
+func (x *RollbackByWorkflowRunRequest) GetReason() string {
+	if x != nil {
+		return x.Reason
+	}
+	return ""
+}
+
+// RollbackByWorkflowRunResponse summarises the per-Job outcomes. Every Job
+// anchored to the requested WorkflowRun appears in exactly one of the three
+// slices.
+type RollbackByWorkflowRunResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	WorkflowRunId string                 `protobuf:"bytes,1,opt,name=workflow_run_id,json=workflowRunId,proto3" json:"workflow_run_id,omitempty"`
+	// cancelled_job_ids: Jobs that were in-flight (pending, running, retrying)
+	// and were transitioned to cancelled.
+	CancelledJobIds []string `protobuf:"bytes,2,rep,name=cancelled_job_ids,json=cancelledJobIds,proto3" json:"cancelled_job_ids,omitempty"`
+	// rolled_back_job_ids: Jobs that had already reached completed or failed
+	// and were transitioned to rolled_back (frozen audit; function outputs
+	// preserved for debugging).
+	RolledBackJobIds []string `protobuf:"bytes,3,rep,name=rolled_back_job_ids,json=rolledBackJobIds,proto3" json:"rolled_back_job_ids,omitempty"`
+	// skipped_job_ids: Jobs that were already in a rollback-terminal state
+	// — included so the call is observably idempotent.
+	SkippedJobIds []string `protobuf:"bytes,4,rep,name=skipped_job_ids,json=skippedJobIds,proto3" json:"skipped_job_ids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RollbackByWorkflowRunResponse) Reset() {
+	*x = RollbackByWorkflowRunResponse{}
+	mi := &file_codevaldfunctions_v1_service_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RollbackByWorkflowRunResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RollbackByWorkflowRunResponse) ProtoMessage() {}
+
+func (x *RollbackByWorkflowRunResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_codevaldfunctions_v1_service_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RollbackByWorkflowRunResponse.ProtoReflect.Descriptor instead.
+func (*RollbackByWorkflowRunResponse) Descriptor() ([]byte, []int) {
+	return file_codevaldfunctions_v1_service_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *RollbackByWorkflowRunResponse) GetWorkflowRunId() string {
+	if x != nil {
+		return x.WorkflowRunId
+	}
+	return ""
+}
+
+func (x *RollbackByWorkflowRunResponse) GetCancelledJobIds() []string {
+	if x != nil {
+		return x.CancelledJobIds
+	}
+	return nil
+}
+
+func (x *RollbackByWorkflowRunResponse) GetRolledBackJobIds() []string {
+	if x != nil {
+		return x.RolledBackJobIds
+	}
+	return nil
+}
+
+func (x *RollbackByWorkflowRunResponse) GetSkippedJobIds() []string {
+	if x != nil {
+		return x.SkippedJobIds
+	}
+	return nil
+}
+
 type DeployFunctionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AgencyId      string                 `protobuf:"bytes,1,opt,name=agency_id,json=agencyId,proto3" json:"agency_id,omitempty"`
@@ -535,7 +681,7 @@ type DeployFunctionRequest struct {
 
 func (x *DeployFunctionRequest) Reset() {
 	*x = DeployFunctionRequest{}
-	mi := &file_codevaldfunctions_v1_service_proto_msgTypes[8]
+	mi := &file_codevaldfunctions_v1_service_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -547,7 +693,7 @@ func (x *DeployFunctionRequest) String() string {
 func (*DeployFunctionRequest) ProtoMessage() {}
 
 func (x *DeployFunctionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_codevaldfunctions_v1_service_proto_msgTypes[8]
+	mi := &file_codevaldfunctions_v1_service_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -560,7 +706,7 @@ func (x *DeployFunctionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeployFunctionRequest.ProtoReflect.Descriptor instead.
 func (*DeployFunctionRequest) Descriptor() ([]byte, []int) {
-	return file_codevaldfunctions_v1_service_proto_rawDescGZIP(), []int{8}
+	return file_codevaldfunctions_v1_service_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *DeployFunctionRequest) GetAgencyId() string {
@@ -608,7 +754,7 @@ type DeployFunctionResponse struct {
 
 func (x *DeployFunctionResponse) Reset() {
 	*x = DeployFunctionResponse{}
-	mi := &file_codevaldfunctions_v1_service_proto_msgTypes[9]
+	mi := &file_codevaldfunctions_v1_service_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -620,7 +766,7 @@ func (x *DeployFunctionResponse) String() string {
 func (*DeployFunctionResponse) ProtoMessage() {}
 
 func (x *DeployFunctionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_codevaldfunctions_v1_service_proto_msgTypes[9]
+	mi := &file_codevaldfunctions_v1_service_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -633,7 +779,7 @@ func (x *DeployFunctionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeployFunctionResponse.ProtoReflect.Descriptor instead.
 func (*DeployFunctionResponse) Descriptor() ([]byte, []int) {
-	return file_codevaldfunctions_v1_service_proto_rawDescGZIP(), []int{9}
+	return file_codevaldfunctions_v1_service_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *DeployFunctionResponse) GetName() string {
@@ -692,7 +838,16 @@ const file_codevaldfunctions_v1_service_proto_rawDesc = "" +
 	"\tagency_id\x18\x01 \x01(\tR\bagencyId\x12\x15\n" +
 	"\x06job_id\x18\x02 \x01(\tR\x05jobId\"@\n" +
 	"\x11CancelJobResponse\x12+\n" +
-	"\x03job\x18\x01 \x01(\v2\x19.codevaldfunctions.v1.JobR\x03job\"\x9c\x01\n" +
+	"\x03job\x18\x01 \x01(\v2\x19.codevaldfunctions.v1.JobR\x03job\"{\n" +
+	"\x1cRollbackByWorkflowRunRequest\x12\x1b\n" +
+	"\tagency_id\x18\x01 \x01(\tR\bagencyId\x12&\n" +
+	"\x0fworkflow_run_id\x18\x02 \x01(\tR\rworkflowRunId\x12\x16\n" +
+	"\x06reason\x18\x03 \x01(\tR\x06reason\"\xca\x01\n" +
+	"\x1dRollbackByWorkflowRunResponse\x12&\n" +
+	"\x0fworkflow_run_id\x18\x01 \x01(\tR\rworkflowRunId\x12*\n" +
+	"\x11cancelled_job_ids\x18\x02 \x03(\tR\x0fcancelledJobIds\x12-\n" +
+	"\x13rolled_back_job_ids\x18\x03 \x03(\tR\x10rolledBackJobIds\x12&\n" +
+	"\x0fskipped_job_ids\x18\x04 \x03(\tR\rskippedJobIds\"\x9c\x01\n" +
 	"\x15DeployFunctionRequest\x12\x1b\n" +
 	"\tagency_id\x18\x01 \x01(\tR\bagencyId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x18\n" +
@@ -701,11 +856,12 @@ const file_codevaldfunctions_v1_service_proto_rawDesc = "" +
 	"\vdescription\x18\x05 \x01(\tR\vdescription\"@\n" +
 	"\x16DeployFunctionResponse\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
-	"\x04path\x18\x02 \x01(\tR\x04path2\x8d\x03\n" +
+	"\x04path\x18\x02 \x01(\tR\x04path2\x90\x04\n" +
 	"\x10FunctionsService\x12Y\n" +
 	"\bListJobs\x12%.codevaldfunctions.v1.ListJobsRequest\x1a&.codevaldfunctions.v1.ListJobsResponse\x12S\n" +
 	"\x06GetJob\x12#.codevaldfunctions.v1.GetJobRequest\x1a$.codevaldfunctions.v1.GetJobResponse\x12\\\n" +
-	"\tCancelJob\x12&.codevaldfunctions.v1.CancelJobRequest\x1a'.codevaldfunctions.v1.CancelJobResponse\x12k\n" +
+	"\tCancelJob\x12&.codevaldfunctions.v1.CancelJobRequest\x1a'.codevaldfunctions.v1.CancelJobResponse\x12\x80\x01\n" +
+	"\x15RollbackByWorkflowRun\x122.codevaldfunctions.v1.RollbackByWorkflowRunRequest\x1a3.codevaldfunctions.v1.RollbackByWorkflowRunResponse\x12k\n" +
 	"\x0eDeployFunction\x12+.codevaldfunctions.v1.DeployFunctionRequest\x1a,.codevaldfunctions.v1.DeployFunctionResponseBVZTgithub.com/aosanya/CodeValdFunctions/gen/go/codevaldfunctions/v1;codevaldfunctionsv1b\x06proto3"
 
 var (
@@ -720,37 +876,41 @@ func file_codevaldfunctions_v1_service_proto_rawDescGZIP() []byte {
 	return file_codevaldfunctions_v1_service_proto_rawDescData
 }
 
-var file_codevaldfunctions_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_codevaldfunctions_v1_service_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_codevaldfunctions_v1_service_proto_goTypes = []any{
-	(*Job)(nil),                    // 0: codevaldfunctions.v1.Job
-	(*JobFilter)(nil),              // 1: codevaldfunctions.v1.JobFilter
-	(*ListJobsRequest)(nil),        // 2: codevaldfunctions.v1.ListJobsRequest
-	(*ListJobsResponse)(nil),       // 3: codevaldfunctions.v1.ListJobsResponse
-	(*GetJobRequest)(nil),          // 4: codevaldfunctions.v1.GetJobRequest
-	(*GetJobResponse)(nil),         // 5: codevaldfunctions.v1.GetJobResponse
-	(*CancelJobRequest)(nil),       // 6: codevaldfunctions.v1.CancelJobRequest
-	(*CancelJobResponse)(nil),      // 7: codevaldfunctions.v1.CancelJobResponse
-	(*DeployFunctionRequest)(nil),  // 8: codevaldfunctions.v1.DeployFunctionRequest
-	(*DeployFunctionResponse)(nil), // 9: codevaldfunctions.v1.DeployFunctionResponse
+	(*Job)(nil),                           // 0: codevaldfunctions.v1.Job
+	(*JobFilter)(nil),                     // 1: codevaldfunctions.v1.JobFilter
+	(*ListJobsRequest)(nil),               // 2: codevaldfunctions.v1.ListJobsRequest
+	(*ListJobsResponse)(nil),              // 3: codevaldfunctions.v1.ListJobsResponse
+	(*GetJobRequest)(nil),                 // 4: codevaldfunctions.v1.GetJobRequest
+	(*GetJobResponse)(nil),                // 5: codevaldfunctions.v1.GetJobResponse
+	(*CancelJobRequest)(nil),              // 6: codevaldfunctions.v1.CancelJobRequest
+	(*CancelJobResponse)(nil),             // 7: codevaldfunctions.v1.CancelJobResponse
+	(*RollbackByWorkflowRunRequest)(nil),  // 8: codevaldfunctions.v1.RollbackByWorkflowRunRequest
+	(*RollbackByWorkflowRunResponse)(nil), // 9: codevaldfunctions.v1.RollbackByWorkflowRunResponse
+	(*DeployFunctionRequest)(nil),         // 10: codevaldfunctions.v1.DeployFunctionRequest
+	(*DeployFunctionResponse)(nil),        // 11: codevaldfunctions.v1.DeployFunctionResponse
 }
 var file_codevaldfunctions_v1_service_proto_depIdxs = []int32{
-	1, // 0: codevaldfunctions.v1.ListJobsRequest.filter:type_name -> codevaldfunctions.v1.JobFilter
-	0, // 1: codevaldfunctions.v1.ListJobsResponse.jobs:type_name -> codevaldfunctions.v1.Job
-	0, // 2: codevaldfunctions.v1.GetJobResponse.job:type_name -> codevaldfunctions.v1.Job
-	0, // 3: codevaldfunctions.v1.CancelJobResponse.job:type_name -> codevaldfunctions.v1.Job
-	2, // 4: codevaldfunctions.v1.FunctionsService.ListJobs:input_type -> codevaldfunctions.v1.ListJobsRequest
-	4, // 5: codevaldfunctions.v1.FunctionsService.GetJob:input_type -> codevaldfunctions.v1.GetJobRequest
-	6, // 6: codevaldfunctions.v1.FunctionsService.CancelJob:input_type -> codevaldfunctions.v1.CancelJobRequest
-	8, // 7: codevaldfunctions.v1.FunctionsService.DeployFunction:input_type -> codevaldfunctions.v1.DeployFunctionRequest
-	3, // 8: codevaldfunctions.v1.FunctionsService.ListJobs:output_type -> codevaldfunctions.v1.ListJobsResponse
-	5, // 9: codevaldfunctions.v1.FunctionsService.GetJob:output_type -> codevaldfunctions.v1.GetJobResponse
-	7, // 10: codevaldfunctions.v1.FunctionsService.CancelJob:output_type -> codevaldfunctions.v1.CancelJobResponse
-	9, // 11: codevaldfunctions.v1.FunctionsService.DeployFunction:output_type -> codevaldfunctions.v1.DeployFunctionResponse
-	8, // [8:12] is the sub-list for method output_type
-	4, // [4:8] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	1,  // 0: codevaldfunctions.v1.ListJobsRequest.filter:type_name -> codevaldfunctions.v1.JobFilter
+	0,  // 1: codevaldfunctions.v1.ListJobsResponse.jobs:type_name -> codevaldfunctions.v1.Job
+	0,  // 2: codevaldfunctions.v1.GetJobResponse.job:type_name -> codevaldfunctions.v1.Job
+	0,  // 3: codevaldfunctions.v1.CancelJobResponse.job:type_name -> codevaldfunctions.v1.Job
+	2,  // 4: codevaldfunctions.v1.FunctionsService.ListJobs:input_type -> codevaldfunctions.v1.ListJobsRequest
+	4,  // 5: codevaldfunctions.v1.FunctionsService.GetJob:input_type -> codevaldfunctions.v1.GetJobRequest
+	6,  // 6: codevaldfunctions.v1.FunctionsService.CancelJob:input_type -> codevaldfunctions.v1.CancelJobRequest
+	8,  // 7: codevaldfunctions.v1.FunctionsService.RollbackByWorkflowRun:input_type -> codevaldfunctions.v1.RollbackByWorkflowRunRequest
+	10, // 8: codevaldfunctions.v1.FunctionsService.DeployFunction:input_type -> codevaldfunctions.v1.DeployFunctionRequest
+	3,  // 9: codevaldfunctions.v1.FunctionsService.ListJobs:output_type -> codevaldfunctions.v1.ListJobsResponse
+	5,  // 10: codevaldfunctions.v1.FunctionsService.GetJob:output_type -> codevaldfunctions.v1.GetJobResponse
+	7,  // 11: codevaldfunctions.v1.FunctionsService.CancelJob:output_type -> codevaldfunctions.v1.CancelJobResponse
+	9,  // 12: codevaldfunctions.v1.FunctionsService.RollbackByWorkflowRun:output_type -> codevaldfunctions.v1.RollbackByWorkflowRunResponse
+	11, // 13: codevaldfunctions.v1.FunctionsService.DeployFunction:output_type -> codevaldfunctions.v1.DeployFunctionResponse
+	9,  // [9:14] is the sub-list for method output_type
+	4,  // [4:9] is the sub-list for method input_type
+	4,  // [4:4] is the sub-list for extension type_name
+	4,  // [4:4] is the sub-list for extension extendee
+	0,  // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_codevaldfunctions_v1_service_proto_init() }
@@ -764,7 +924,7 @@ func file_codevaldfunctions_v1_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_codevaldfunctions_v1_service_proto_rawDesc), len(file_codevaldfunctions_v1_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

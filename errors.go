@@ -14,4 +14,9 @@ var (
 	// ErrFunctionNotFound is returned when no handler is registered for the
 	// requested function name.
 	ErrFunctionNotFound = errors.New("function not found")
+
+	// ErrWorkflowRunIDRequired is returned by [FunctionsManager.RollbackByWorkflowRun]
+	// when the caller passes an empty workflow_run_id. A global "rollback every
+	// Job" sweep is intentionally not supported.
+	ErrWorkflowRunIDRequired = errors.New("workflow_run_id is required")
 )

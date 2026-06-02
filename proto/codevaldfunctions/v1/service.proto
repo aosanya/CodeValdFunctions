@@ -65,6 +65,39 @@ message CancelJobResponse {
   Job job = 1;
 }
 
+// ── RollbackByWorkflowRun ─────────────────────────────────────────────────────
+
+// RollbackByWorkflowRunRequest is the input to the CodeValdFunctions leg of
+// the WorkflowRun rollback coordinator (FEAT-20260602-004 Phase 2). The
+// coordinator in CodeValdWork calls this once per affected agency.
+message RollbackByWorkflowRunRequest {
+  string agency_id       = 1;
+  // workflow_run_id is required — a global "rollback every Job" sweep is
+  // intentionally not supported.
+  string workflow_run_id = 2;
+  // reason is the operator-supplied rollback reason recorded on each affected
+  // Job and propagated to functions.job.cancelled / functions.job.rolled_back
+  // events.
+  string reason          = 3;
+}
+
+// RollbackByWorkflowRunResponse summarises the per-Job outcomes. Every Job
+// anchored to the requested WorkflowRun appears in exactly one of the three
+// slices.
+message RollbackByWorkflowRunResponse {
+  string          workflow_run_id     = 1;
+  // cancelled_job_ids: Jobs that were in-flight (pending, running, retrying)
+  // and were transitioned to cancelled.
+  repeated string cancelled_job_ids   = 2;
+  // rolled_back_job_ids: Jobs that had already reached completed or failed
+  // and were transitioned to rolled_back (frozen audit; function outputs
+  // preserved for debugging).
+  repeated string rolled_back_job_ids = 3;
+  // skipped_job_ids: Jobs that were already in a rollback-terminal state
+  // — included so the call is observably idempotent.
+  repeated string skipped_job_ids     = 4;
+}
+
 // ── DeployFunction ────────────────────────────────────────────────────────────
 
 message DeployFunctionRequest {
@@ -93,6 +126,13 @@ service FunctionsService {
   // Error: NOT_FOUND if the job does not exist.
   // Error: FAILED_PRECONDITION if the job is in a terminal state.
   rpc CancelJob(CancelJobRequest) returns (CancelJobResponse);
+
+  // RollbackByWorkflowRun applies the CodeValdFunctions leg of the WorkflowRun
+  // rollback contract (FEAT-20260602-004 Phase 2): in-flight Jobs go to
+  // cancelled; already-terminal Jobs go to rolled_back as a frozen audit
+  // record. Called by CodeValdWork's rollback coordinator.
+  // Error: INVALID_ARGUMENT if workflow_run_id is empty.
+  rpc RollbackByWorkflowRun(RollbackByWorkflowRunRequest) returns (RollbackByWorkflowRunResponse);
 
   // DeployFunction installs a new function binary into the functions directory.
   // The function is immediately discoverable — no restart required.
