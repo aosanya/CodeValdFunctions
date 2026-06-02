@@ -30,6 +30,7 @@ func (s *Server) ListJobs(ctx context.Context, req *pb.ListJobsRequest) (*pb.Lis
 	if f := req.GetFilter(); f != nil {
 		filter.Status = codevaldfunctions.JobStatus(f.GetStatus())
 		filter.FunctionName = f.GetFunctionName()
+		filter.WorkflowRunID = f.GetWorkflowRunId()
 	}
 	jobs, err := s.mgr.ListJobs(ctx, req.GetAgencyId(), filter)
 	if err != nil {
@@ -102,6 +103,7 @@ func jobToProto(j codevaldfunctions.Job) *pb.Job {
 		StartedAt:      formatTime(j.StartedAt),
 		CompletedAt:    formatTime(j.CompletedAt),
 		TaskId:         j.TaskID,
+		WorkflowRunId:  j.WorkflowRunID,
 	}
 }
 
