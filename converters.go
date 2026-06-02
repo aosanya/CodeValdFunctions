@@ -16,6 +16,7 @@ func jobFromEntity(e entitygraph.Entity) Job {
 		TriggerEvent:   entitygraph.StringProp(e.Properties, "trigger_event"),
 		TriggerPayload: entitygraph.StringProp(e.Properties, "trigger_payload"),
 		TaskID:         entitygraph.StringProp(e.Properties, "task_id"),
+		WorkflowRunID:  entitygraph.StringProp(e.Properties, "workflow_run_id"),
 		Result:         entitygraph.StringProp(e.Properties, "result"),
 		Error:          entitygraph.StringProp(e.Properties, "error"),
 		RetryCount:     intProp(e.Properties, "retry_count"),

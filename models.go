@@ -27,8 +27,9 @@ const (
 
 // JobFilter narrows ListJobs results. Zero values are ignored.
 type JobFilter struct {
-	Status       JobStatus // filter by status; zero means all statuses
-	FunctionName string    // filter by function name; empty means all functions
+	Status        JobStatus // filter by status; zero means all statuses
+	FunctionName  string    // filter by function name; empty means all functions
+	WorkflowRunID string    // filter by originating WorkflowRun ID; empty means all runs
 }
 
 // Job represents a single function execution triggered by a platform event.
@@ -55,6 +56,11 @@ type Job struct {
 	// TaskID is the platform task ID extracted from the trigger payload,
 	// used to correlate this Job with a CodeValdWork task.
 	TaskID string
+
+	// WorkflowRunID is the originating WorkflowRun ID, copied from the inbound
+	// trigger event under the platform-wide chain-through rule. Empty for jobs
+	// triggered by non-pipeline events (orphan v1 policy).
+	WorkflowRunID string
 
 	// Result is the JSON-encoded function output on successful completion.
 	Result string
