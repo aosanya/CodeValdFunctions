@@ -1,0 +1,208 @@
+#!/usr/bin/env python3
+"""
+start-pipeline — CodeValdFunctions binary function
+
+Mints a WorkflowRun at the head of an orchestrated pipeline and chains
+control into the existing next-task-selector plan.
+
+Trigger:
+  work.pipeline.requested
+
+Effect:
+  1. POST /work/{agency_id}/workflow-runs to create a WorkflowRun.
+     Body forwards inbound name / trigger_event / initiator (all optional).
+  2. POST /pubsub/{agency_id}/events with topic="work.pipeline.started"
+     carrying the new workflow_run_id (confirmation event — consumed by
+     the UI's LiveProgressBanner and by QA scenario 09 to learn the run-id).
+  3. POST /pubsub/{agency_id}/events with topic="work.next.requested"
+     carrying the workflow_run_id (hands off to next-task-selector, which
+     propagates the run-id onto every downstream artifact per the
+     workflow_run_id chain-through rule).
+
+Protocol:
+  stdin:  JSON { "job_id": "...", "agency_id": "...", "task_id": "...", "payload": "..." }
+  stdout: JSON { "status": "ok"|"error", "result": "...", "error": "..." }
+  exit 0 always; infrastructure errors use status="error"
+
+The `payload` field is the raw work.pipeline.requested event payload as a
+JSON string. Recognised optional keys:
+  name           — caller-supplied label, unique per agency
+  trigger_event  — free-form label shown in UI (e.g. "qa.scenario-09")
+  initiator      — opaque actor id ("qa-runner", operator email, etc.)
+
+Environment:
+  FN_GIT_CLONE_BASE   Cross base URL (e.g. http://codevaldcross:8081)
+  FN_CROSS_AUTH_USER  Cross basic-auth username (optional)
+  FN_CROSS_AUTH_PASS  Cross basic-auth password (optional)
+"""
+
+import base64
+import json
+import os
+import sys
+import urllib.error
+import urllib.request
+
+
+DEFAULT_TRIGGER_EVENT = "work.pipeline.requested"
+DEFAULT_INITIATOR     = "unknown"
+
+
+def emit(status, result_obj=None, error=""):
+    out = {"status": status}
+    if result_obj is not None:
+        out["result"] = json.dumps(result_obj)
+    if error:
+        out["error"] = error
+    print(json.dumps(out))
+    sys.exit(0)
+
+
+def fail(msg):
+    emit("error", error=msg)
+
+
+def auth_header():
+    user = os.environ.get("FN_CROSS_AUTH_USER", "")
+    pw   = os.environ.get("FN_CROSS_AUTH_PASS", "")
+    if not user:
+        return ""
+    return "Basic " + base64.b64encode(f"{user}:{pw}".encode()).decode()
+
+
+def cross_request(method, url, body=None):
+    data = json.dumps(body).encode() if body is not None else None
+    req = urllib.request.Request(url, data=data, method=method)
+    hdr = auth_header()
+    if hdr:
+        req.add_header("Authorization", hdr)
+    if body is not None:
+        req.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            raw = resp.read()
+            return json.loads(raw) if raw else {}
+    except urllib.error.HTTPError as e:
+        body_text = e.read().decode()[:300] if e.fp else ""
+        raise RuntimeError(f"{method} {url} → {e.code}: {body_text}")
+    except Exception as e:
+        raise RuntimeError(f"{method} {url} → {e}")
+
+
+def parse_event_payload(raw):
+    """Return a dict for the inbound event payload. Empty/invalid → {}."""
+    if not raw:
+        return {}
+    try:
+        v = json.loads(raw)
+        return v if isinstance(v, dict) else {}
+    except json.JSONDecodeError:
+        return {}
+
+
+def first_nonempty(*vals):
+    for v in vals:
+        if v:
+            return v
+    return ""
+
+
+def create_workflow_run(base, agency_id, name, trigger_event, initiator):
+    body = {
+        "agency_id":     agency_id,
+        "name":          name,
+        "trigger_event": trigger_event,
+        "initiator":     initiator,
+    }
+    resp = cross_request("POST", f"{base}/work/{agency_id}/workflow-runs", body=body)
+    run = resp.get("run") or {}
+    run_id = run.get("id") or run.get("workflowRunId") or run.get("workflow_run_id")
+    if not run_id:
+        raise RuntimeError(f"CreateWorkflowRun response missing run.id: {resp}")
+    return {
+        "id":            run_id,
+        "name":          run.get("name", name),
+        "trigger_event": run.get("triggerEvent") or run.get("trigger_event") or trigger_event,
+        "initiator":     run.get("initiator", initiator),
+        "started_at":    run.get("startedAt") or run.get("started_at", ""),
+        "status":        run.get("status", ""),
+    }
+
+
+def publish(base, agency_id, topic, payload_obj):
+    body = {
+        "agency_id": agency_id,
+        "topic":     topic,
+        "source":    "start-pipeline",
+        "payload":   json.dumps(payload_obj),
+    }
+    cross_request("POST", f"{base}/pubsub/{agency_id}/events", body=body)
+
+
+def main():
+    try:
+        inp = json.loads(sys.stdin.read() or "{}")
+    except json.JSONDecodeError as e:
+        fail(f"unparseable stdin: {e}")
+
+    base = os.environ.get("FN_GIT_CLONE_BASE", "").rstrip("/")
+    if not base:
+        fail("FN_GIT_CLONE_BASE not set")
+
+    event = parse_event_payload(inp.get("payload", ""))
+
+    agency_id = first_nonempty(inp.get("agency_id"), event.get("agency_id"), event.get("agencyId"))
+    if not agency_id:
+        fail("agency_id missing from input and payload")
+
+    # Pass through optional fields. The Work server generates a name when
+    # empty and enforces uniqueness per agency.
+    name           = first_nonempty(event.get("name"))
+    trigger_event  = first_nonempty(event.get("trigger_event"), event.get("triggerEvent"), DEFAULT_TRIGGER_EVENT)
+    initiator      = first_nonempty(event.get("initiator"), DEFAULT_INITIATOR)
+
+    try:
+        run = create_workflow_run(base, agency_id, name, trigger_event, initiator)
+    except RuntimeError as e:
+        fail(f"create workflow run: {e}")
+
+    # Confirmation event — UI/test subscribers correlate by name to learn
+    # the run id even when the caller did not supply one.
+    started_payload = {
+        "workflow_run_id": run["id"],
+        "name":            run["name"],
+        "trigger_event":   run["trigger_event"],
+        "initiator":       run["initiator"],
+        "started_at":      run["started_at"],
+        "agency_id":       agency_id,
+    }
+    try:
+        publish(base, agency_id, "work.pipeline.started", started_payload)
+    except RuntimeError as e:
+        fail(f"publish work.pipeline.started (run={run['id']}): {e}")
+
+    # Handoff — next-task-selector reads workflow_run_id from its inbound
+    # payload and propagates it onto every artifact downstream.
+    next_payload = {
+        "workflow_run_id": run["id"],
+        "agency_id":       agency_id,
+    }
+    try:
+        publish(base, agency_id, "work.next.requested", next_payload)
+    except RuntimeError as e:
+        fail(f"publish work.next.requested (run={run['id']}): {e}")
+
+    emit("ok", result_obj={
+        "workflow_run_id": run["id"],
+        "name":            run["name"],
+        "trigger_event":   run["trigger_event"],
+        "initiator":       run["initiator"],
+        "published": [
+            "work.pipeline.started",
+            "work.next.requested",
+        ],
+    })
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,5 @@
+{
+  "name": "start-pipeline",
+  "trigger": "work.pipeline.requested",
+  "description": "Mints a WorkflowRun at the head of an orchestrated pipeline. Publishes work.pipeline.started (confirmation, carries the new workflow_run_id) and work.next.requested (handoff to next-task-selector). Entry point for every orchestrated pipeline — every downstream artifact must carry workflow_run_id forward per the chain-through rule."
+}
