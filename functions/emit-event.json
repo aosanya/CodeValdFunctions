@@ -1,0 +1,5 @@
+{
+  "name": "emit-event",
+  "trigger": "work.pipeline.requested",
+  "description": "FEAT-20260602-005 helper. Publishes an arbitrary Cross event with the topic + payload supplied in function_params. Lets recovery pipelines synthesise the parent step's success event without a bespoke binary — the recovery is a one-step pipeline whose function_code is emit-event."
+}
