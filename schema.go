@@ -50,6 +50,11 @@ func DefaultFunctionsSchema() types.Schema {
 					// task_id is the platform task ID extracted from the trigger payload,
 					// used to correlate Jobs with CodeValdWork tasks.
 					{Name: "task_id", Type: types.PropertyTypeString},
+					// workflow_run_id is the originating WorkflowRun ID, propagated from
+					// the inbound trigger event under the platform-wide chain-through
+					// rule (see CodeValdCross architecture-notes/workflow-run-propagation.md).
+					// Empty for jobs triggered by non-pipeline events (orphan v1 policy).
+					{Name: "workflow_run_id", Type: types.PropertyTypeString},
 					// result is the JSON-encoded function output on successful completion.
 					{Name: "result", Type: types.PropertyTypeString},
 					// error is the error message when the job reaches a failed state.
