@@ -96,11 +96,12 @@ func (d *FunctionsDispatcher) Dispatch(ctx context.Context, topic, payload strin
 	}
 
 	var meta struct {
-		TaskID string `json:"task_id"`
+		TaskID        string `json:"task_id"`
+		WorkflowRunID string `json:"workflow_run_id"`
 	}
 	_ = json.Unmarshal([]byte(payload), &meta)
 
-	job, err := d.mgr.CreateJob(ctx, d.agencyID, name, topic, payload, meta.TaskID)
+	job, err := d.mgr.CreateJob(ctx, d.agencyID, name, topic, payload, meta.TaskID, meta.WorkflowRunID)
 	if err != nil {
 		log.Printf("codevaldfunctions: Dispatch: CreateJob topic=%s: %v", topic, err)
 		return
@@ -133,7 +134,33 @@ func (d *FunctionsDispatcher) Dispatch(ctx context.Context, topic, payload strin
 		return
 	}
 
+	// Back-fill workflow_run_id for functions that mint the run themselves
+	// (start-pipeline): the trigger event has no run ID, but the function's
+	// result carries the newly-minted one.
+	if job.WorkflowRunID == "" {
+		if mintedID := extractWorkflowRunID(out.Result); mintedID != "" {
+			if _, err := d.mgr.SetJobWorkflowRunID(ctx, d.agencyID, job.ID, mintedID); err != nil {
+				log.Printf("codevaldfunctions: Dispatch: SetJobWorkflowRunID job=%s: %v", job.ID, err)
+			}
+		}
+	}
+
 	if _, err := d.mgr.CompleteJob(ctx, d.agencyID, job.ID, out.Result); err != nil {
 		log.Printf("codevaldfunctions: Dispatch: CompleteJob job=%s: %v", job.ID, err)
 	}
+}
+
+// extractWorkflowRunID parses workflow_run_id from a function result JSON.
+// Returns "" if result is empty, not JSON, or has no workflow_run_id field.
+func extractWorkflowRunID(result string) string {
+	if result == "" {
+		return ""
+	}
+	var r struct {
+		WorkflowRunID string `json:"workflow_run_id"`
+	}
+	if err := json.Unmarshal([]byte(result), &r); err != nil {
+		return ""
+	}
+	return r.WorkflowRunID
 }

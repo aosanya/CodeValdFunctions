@@ -32,8 +32,10 @@ func NewFunctionsManager(dm entitygraph.DataManager, pub CrossPublisher, agencyI
 	return &functionsManager{dm: dm, pub: pub, agencyID: agencyID}
 }
 
-// CreateJob creates a new Job entity in the pending state.
-func (m *functionsManager) CreateJob(ctx context.Context, agencyID, functionName, triggerEvent, payload, taskID string) (Job, error) {
+// CreateJob creates a new Job entity in the pending state. workflowRunID is
+// the originating WorkflowRun ID from the inbound trigger payload (empty for
+// non-pipeline triggers — see chain-through rule).
+func (m *functionsManager) CreateJob(ctx context.Context, agencyID, functionName, triggerEvent, payload, taskID, workflowRunID string) (Job, error) {
 	now := time.Now().UTC().Format(time.RFC3339)
 	entity, err := m.dm.CreateEntity(ctx, entitygraph.CreateEntityRequest{
 		AgencyID: agencyID,
@@ -44,6 +46,7 @@ func (m *functionsManager) CreateJob(ctx context.Context, agencyID, functionName
 			"trigger_event":   triggerEvent,
 			"trigger_payload": payload,
 			"task_id":         taskID,
+			"workflow_run_id": workflowRunID,
 			"result":          "",
 			"error":           "",
 			"retry_count":     0,
@@ -58,6 +61,23 @@ func (m *functionsManager) CreateJob(ctx context.Context, agencyID, functionName
 	job := jobFromEntity(entity)
 	m.publish(ctx, "functions.job.created", agencyID, job.ID)
 	return job, nil
+}
+
+// SetJobWorkflowRunID back-fills the WorkflowRun ID on a Job. See interface
+// godoc for the use case (start-pipeline self-stamping).
+func (m *functionsManager) SetJobWorkflowRunID(ctx context.Context, agencyID, jobID, workflowRunID string) (Job, error) {
+	if _, err := m.GetJob(ctx, agencyID, jobID); err != nil {
+		return Job{}, err
+	}
+	updated, err := m.dm.UpdateEntity(ctx, agencyID, jobID, entitygraph.UpdateEntityRequest{
+		Properties: map[string]any{
+			"workflow_run_id": workflowRunID,
+		},
+	})
+	if err != nil {
+		return Job{}, fmt.Errorf("SetJobWorkflowRunID: %w", err)
+	}
+	return jobFromEntity(updated), nil
 }
 
 // GetJob retrieves a single Job by ID.
@@ -83,6 +103,9 @@ func (m *functionsManager) ListJobs(ctx context.Context, agencyID string, filter
 	}
 	if filter.FunctionName != "" {
 		props["function_name"] = filter.FunctionName
+	}
+	if filter.WorkflowRunID != "" {
+		props["workflow_run_id"] = filter.WorkflowRunID
 	}
 	entities, err := m.dm.ListEntities(ctx, entitygraph.EntityFilter{
 		AgencyID:   agencyID,
@@ -220,9 +243,10 @@ func (m *functionsManager) publish(ctx context.Context, topic, agencyID, jobID s
 		Topic:    topic,
 		AgencyID: agencyID,
 		Payload: map[string]string{
-			"job_id":        jobID,
-			"function_name": job.FunctionName,
-			"trigger_event": job.TriggerEvent,
+			"job_id":          jobID,
+			"function_name":   job.FunctionName,
+			"trigger_event":   job.TriggerEvent,
+			"workflow_run_id": job.WorkflowRunID,
 		},
 	})
 }

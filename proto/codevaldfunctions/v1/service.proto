@@ -19,12 +19,17 @@ message Job {
   string started_at      = 11;
   string completed_at    = 12;
   string task_id         = 13;
+  // workflow_run_id is the originating WorkflowRun ID, propagated from the
+  // inbound trigger event under the platform-wide chain-through rule.
+  // Empty for jobs triggered by non-pipeline events (orphan v1 policy).
+  string workflow_run_id = 14;
 }
 
 // JobFilter narrows ListJobs results. All fields are optional.
 message JobFilter {
-  string status        = 1; // filter by job status (e.g. "pending", "running")
-  string function_name = 2; // filter by the registered function name
+  string status          = 1; // filter by job status (e.g. "pending", "running")
+  string function_name   = 2; // filter by the registered function name
+  string workflow_run_id = 3; // filter by originating WorkflowRun ID
 }
 
 // ── ListJobs ─────────────────────────────────────────────────────────────────

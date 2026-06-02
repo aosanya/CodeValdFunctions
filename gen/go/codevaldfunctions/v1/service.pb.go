@@ -37,8 +37,12 @@ type Job struct {
 	StartedAt      string                 `protobuf:"bytes,11,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
 	CompletedAt    string                 `protobuf:"bytes,12,opt,name=completed_at,json=completedAt,proto3" json:"completed_at,omitempty"`
 	TaskId         string                 `protobuf:"bytes,13,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// workflow_run_id is the originating WorkflowRun ID, propagated from the
+	// inbound trigger event under the platform-wide chain-through rule.
+	// Empty for jobs triggered by non-pipeline events (orphan v1 policy).
+	WorkflowRunId string `protobuf:"bytes,14,opt,name=workflow_run_id,json=workflowRunId,proto3" json:"workflow_run_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Job) Reset() {
@@ -162,11 +166,19 @@ func (x *Job) GetTaskId() string {
 	return ""
 }
 
+func (x *Job) GetWorkflowRunId() string {
+	if x != nil {
+		return x.WorkflowRunId
+	}
+	return ""
+}
+
 // JobFilter narrows ListJobs results. All fields are optional.
 type JobFilter struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Status        string                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`                                 // filter by job status (e.g. "pending", "running")
-	FunctionName  string                 `protobuf:"bytes,2,opt,name=function_name,json=functionName,proto3" json:"function_name,omitempty"` // filter by the registered function name
+	Status        string                 `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`                                      // filter by job status (e.g. "pending", "running")
+	FunctionName  string                 `protobuf:"bytes,2,opt,name=function_name,json=functionName,proto3" json:"function_name,omitempty"`      // filter by the registered function name
+	WorkflowRunId string                 `protobuf:"bytes,3,opt,name=workflow_run_id,json=workflowRunId,proto3" json:"workflow_run_id,omitempty"` // filter by originating WorkflowRun ID
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -211,6 +223,13 @@ func (x *JobFilter) GetStatus() string {
 func (x *JobFilter) GetFunctionName() string {
 	if x != nil {
 		return x.FunctionName
+	}
+	return ""
+}
+
+func (x *JobFilter) GetWorkflowRunId() string {
+	if x != nil {
+		return x.WorkflowRunId
 	}
 	return ""
 }
@@ -635,7 +654,7 @@ var File_codevaldfunctions_v1_service_proto protoreflect.FileDescriptor
 
 const file_codevaldfunctions_v1_service_proto_rawDesc = "" +
 	"\n" +
-	"\"codevaldfunctions/v1/service.proto\x12\x14codevaldfunctions.v1\"\x86\x03\n" +
+	"\"codevaldfunctions/v1/service.proto\x12\x14codevaldfunctions.v1\"\xae\x03\n" +
 	"\x03Job\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
 	"\tagency_id\x18\x02 \x01(\tR\bagencyId\x12\x16\n" +
@@ -653,10 +672,12 @@ const file_codevaldfunctions_v1_service_proto_rawDesc = "" +
 	"\n" +
 	"started_at\x18\v \x01(\tR\tstartedAt\x12!\n" +
 	"\fcompleted_at\x18\f \x01(\tR\vcompletedAt\x12\x17\n" +
-	"\atask_id\x18\r \x01(\tR\x06taskId\"H\n" +
+	"\atask_id\x18\r \x01(\tR\x06taskId\x12&\n" +
+	"\x0fworkflow_run_id\x18\x0e \x01(\tR\rworkflowRunId\"p\n" +
 	"\tJobFilter\x12\x16\n" +
 	"\x06status\x18\x01 \x01(\tR\x06status\x12#\n" +
-	"\rfunction_name\x18\x02 \x01(\tR\ffunctionName\"g\n" +
+	"\rfunction_name\x18\x02 \x01(\tR\ffunctionName\x12&\n" +
+	"\x0fworkflow_run_id\x18\x03 \x01(\tR\rworkflowRunId\"g\n" +
 	"\x0fListJobsRequest\x12\x1b\n" +
 	"\tagency_id\x18\x01 \x01(\tR\bagencyId\x127\n" +
 	"\x06filter\x18\x02 \x01(\v2\x1f.codevaldfunctions.v1.JobFilterR\x06filter\"A\n" +
