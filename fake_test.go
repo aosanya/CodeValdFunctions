@@ -6,8 +6,22 @@ import (
 	"sync"
 
 	"github.com/aosanya/CodeValdSharedLib/entitygraph"
+	"github.com/aosanya/CodeValdSharedLib/eventbus"
 	"github.com/google/uuid"
 )
+
+// capturingPublisher records every Publish call for test assertions.
+type capturingPublisher struct {
+	mu     sync.Mutex
+	events []eventbus.Event
+}
+
+func (p *capturingPublisher) Publish(_ context.Context, e eventbus.Event) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.events = append(p.events, e)
+	return nil
+}
 
 // fakeDataManager is an in-memory entitygraph.DataManager for unit tests.
 type fakeDataManager struct {

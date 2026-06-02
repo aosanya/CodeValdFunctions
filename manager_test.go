@@ -271,6 +271,119 @@ func TestGetJob_NotFound(t *testing.T) {
 	}
 }
 
+// ── workflow_run_id propagation (FEAT-20260602-002) ──────────────────────────
+
+func TestCreateJob_PersistsWorkflowRunID(t *testing.T) {
+	mgr := newTestManager()
+	job := mustCreateJobWithRun(t, mgr, "wfr_abc123")
+	if job.WorkflowRunID != "wfr_abc123" {
+		t.Errorf("want workflow_run_id %q on returned Job, got %q", "wfr_abc123", job.WorkflowRunID)
+	}
+	got, err := mgr.GetJob(context.Background(), testAgencyID, job.ID)
+	if err != nil {
+		t.Fatalf("GetJob: %v", err)
+	}
+	if got.WorkflowRunID != "wfr_abc123" {
+		t.Errorf("want workflow_run_id %q after GetJob, got %q", "wfr_abc123", got.WorkflowRunID)
+	}
+}
+
+func TestCreateJob_EmptyWorkflowRunIDAllowed(t *testing.T) {
+	// Orphan policy: a non-pipeline trigger may legitimately have no run ID.
+	mgr := newTestManager()
+	job := mustCreateJobWithRun(t, mgr, "")
+	if job.WorkflowRunID != "" {
+		t.Errorf("want empty workflow_run_id, got %q", job.WorkflowRunID)
+	}
+}
+
+func TestListJobs_FilterByWorkflowRunID(t *testing.T) {
+	mgr := newTestManager()
+	mustCreateJobWithRun(t, mgr, "wfr_run1")
+	mustCreateJobWithRun(t, mgr, "wfr_run1")
+	mustCreateJobWithRun(t, mgr, "wfr_run2")
+	mustCreateJobWithRun(t, mgr, "")
+
+	run1, err := mgr.ListJobs(context.Background(), testAgencyID, JobFilter{WorkflowRunID: "wfr_run1"})
+	if err != nil {
+		t.Fatalf("ListJobs: %v", err)
+	}
+	if len(run1) != 2 {
+		t.Errorf("want 2 jobs for wfr_run1, got %d", len(run1))
+	}
+	for _, j := range run1 {
+		if j.WorkflowRunID != "wfr_run1" {
+			t.Errorf("filter leaked: job %s has workflow_run_id %q", j.ID, j.WorkflowRunID)
+		}
+	}
+
+	run2, err := mgr.ListJobs(context.Background(), testAgencyID, JobFilter{WorkflowRunID: "wfr_run2"})
+	if err != nil {
+		t.Fatalf("ListJobs: %v", err)
+	}
+	if len(run2) != 1 {
+		t.Errorf("want 1 job for wfr_run2, got %d", len(run2))
+	}
+}
+
+func TestSetJobWorkflowRunID_Backfills(t *testing.T) {
+	// Simulates the start-pipeline case: Job created with empty run ID, then
+	// stamped after the function returns its minted run.
+	mgr := newTestManager()
+	job := mustCreateJobWithRun(t, mgr, "")
+	if job.WorkflowRunID != "" {
+		t.Fatalf("precondition: want empty workflow_run_id, got %q", job.WorkflowRunID)
+	}
+
+	updated, err := mgr.SetJobWorkflowRunID(context.Background(), testAgencyID, job.ID, "wfr_minted")
+	if err != nil {
+		t.Fatalf("SetJobWorkflowRunID: %v", err)
+	}
+	if updated.WorkflowRunID != "wfr_minted" {
+		t.Errorf("want %q on returned Job, got %q", "wfr_minted", updated.WorkflowRunID)
+	}
+	got, _ := mgr.GetJob(context.Background(), testAgencyID, job.ID)
+	if got.WorkflowRunID != "wfr_minted" {
+		t.Errorf("want %q persisted, got %q", "wfr_minted", got.WorkflowRunID)
+	}
+}
+
+func TestSetJobWorkflowRunID_NotFound(t *testing.T) {
+	mgr := newTestManager()
+	_, err := mgr.SetJobWorkflowRunID(context.Background(), testAgencyID, "nonexistent", "wfr_x")
+	if !errors.Is(err, ErrJobNotFound) {
+		t.Errorf("want ErrJobNotFound, got %v", err)
+	}
+}
+
+func TestPublish_IncludesWorkflowRunID(t *testing.T) {
+	pub := &capturingPublisher{}
+	dm := newFakeDataManager()
+	mgr := NewFunctionsManager(dm, pub, testAgencyID)
+
+	if _, err := mgr.CreateJob(context.Background(), testAgencyID, "compile", "work.todo.completed", `{}`, "", "wfr_pub_test"); err != nil {
+		t.Fatalf("CreateJob: %v", err)
+	}
+
+	if len(pub.events) == 0 {
+		t.Fatal("want at least one published event")
+	}
+	for _, e := range pub.events {
+		if e.Topic != "functions.job.created" {
+			continue
+		}
+		payload, ok := e.Payload.(map[string]string)
+		if !ok {
+			t.Fatalf("publish: payload type %T, want map[string]string", e.Payload)
+		}
+		if got := payload["workflow_run_id"]; got != "wfr_pub_test" {
+			t.Errorf("functions.job.created: want workflow_run_id=%q in payload, got %q", "wfr_pub_test", got)
+		}
+		return
+	}
+	t.Errorf("no functions.job.created event seen; got: %v", pub.events)
+}
+
 func TestRetrying_CanStartAgain(t *testing.T) {
 	mgr := newTestManager()
 	ctx := context.Background()
