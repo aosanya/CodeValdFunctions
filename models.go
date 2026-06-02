@@ -17,12 +17,13 @@ type CrossPublisher interface {
 type JobStatus string
 
 const (
-	JobStatusPending   JobStatus = "pending"
-	JobStatusRunning   JobStatus = "running"
-	JobStatusCompleted JobStatus = "completed"
-	JobStatusFailed    JobStatus = "failed"
-	JobStatusCancelled JobStatus = "cancelled"
-	JobStatusRetrying  JobStatus = "retrying"
+	JobStatusPending    JobStatus = "pending"
+	JobStatusRunning    JobStatus = "running"
+	JobStatusCompleted  JobStatus = "completed"
+	JobStatusFailed     JobStatus = "failed"
+	JobStatusCancelled  JobStatus = "cancelled"
+	JobStatusRetrying   JobStatus = "retrying"
+	JobStatusRolledBack JobStatus = "rolled_back"
 )
 
 // JobFilter narrows ListJobs results. Zero values are ignored.
@@ -80,4 +81,27 @@ type Job struct {
 	// CompletedAt is when the job reached a terminal state. Zero value means
 	// the job has not yet terminated.
 	CompletedAt time.Time
+}
+
+// RollbackByWorkflowRunResult summarises the per-Job outcomes of
+// [FunctionsManager.RollbackByWorkflowRun]. Every Job anchored to the
+// requested WorkflowRun appears in exactly one of the three slices.
+type RollbackByWorkflowRunResult struct {
+	// WorkflowRunID echoes the requested anchor.
+	WorkflowRunID string `json:"workflow_run_id"`
+
+	// CancelledJobIDs are Jobs that were in-flight (pending, running, or
+	// retrying) at rollback time and were transitioned to
+	// [JobStatusCancelled].
+	CancelledJobIDs []string `json:"cancelled_job_ids,omitempty"`
+
+	// RolledBackJobIDs are Jobs that had already reached completed or
+	// failed and were transitioned to [JobStatusRolledBack] as a frozen
+	// audit record. Function outputs (result, error, compile logs) are
+	// preserved for debugging.
+	RolledBackJobIDs []string `json:"rolled_back_job_ids,omitempty"`
+
+	// SkippedJobIDs are Jobs that were already in a rollback-terminal
+	// state (cancelled or rolled_back) — the call is idempotent for these.
+	SkippedJobIDs []string `json:"skipped_job_ids,omitempty"`
 }

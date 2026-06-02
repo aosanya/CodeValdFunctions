@@ -39,7 +39,7 @@ func New(
 		advertiseAddr,
 		agencyID,
 		"codevaldfunctions",
-		[]string{"functions.job.created", "functions.job.started", "functions.job.completed", "functions.job.failed"},
+		[]string{"functions.job.created", "functions.job.started", "functions.job.completed", "functions.job.failed", "functions.job.cancelled", "functions.job.rolled_back"},
 		[]string{"work.todo.completed", "functions.job.completed", "git.branch.create", "git.branch.delete", "work.next.requested", "work.pipeline.requested"},
 		functionsRoutes(),
 		pingInterval,
@@ -105,6 +105,17 @@ func functionsRoutes() []types.RouteInfo {
 			PathBindings: []types.PathBinding{
 				agency,
 				{URLParam: "jobId", Field: "job_id"},
+			},
+		},
+		{
+			Method:     "DELETE",
+			Pattern:    "/functions/{agencyId}/by-workflow-run/{workflowRunId}",
+			Capability: "rollback_by_workflow_run",
+			GrpcMethod: "/codevaldfunctions.v1.FunctionsService/RollbackByWorkflowRun",
+			IsWrite:    true,
+			PathBindings: []types.PathBinding{
+				agency,
+				{URLParam: "workflowRunId", Field: "workflow_run_id"},
 			},
 		},
 	}

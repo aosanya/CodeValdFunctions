@@ -70,6 +70,25 @@ func (s *Server) CancelJob(ctx context.Context, req *pb.CancelJobRequest) (*pb.C
 	return &pb.CancelJobResponse{Job: jobToProto(job)}, nil
 }
 
+// RollbackByWorkflowRun applies the CodeValdFunctions leg of the WorkflowRun
+// rollback contract (FEAT-20260602-004 Phase 2): in-flight Jobs go to
+// cancelled; already-terminal Jobs go to rolled_back as a frozen audit record.
+func (s *Server) RollbackByWorkflowRun(ctx context.Context, req *pb.RollbackByWorkflowRunRequest) (*pb.RollbackByWorkflowRunResponse, error) {
+	result, err := s.mgr.RollbackByWorkflowRun(ctx, req.GetAgencyId(), req.GetWorkflowRunId(), req.GetReason())
+	if err != nil {
+		if errors.Is(err, codevaldfunctions.ErrWorkflowRunIDRequired) {
+			return nil, status.Errorf(codes.InvalidArgument, "rollback by workflow run: %v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "rollback by workflow run: %v", err)
+	}
+	return &pb.RollbackByWorkflowRunResponse{
+		WorkflowRunId:    result.WorkflowRunID,
+		CancelledJobIds:  result.CancelledJobIDs,
+		RolledBackJobIds: result.RolledBackJobIDs,
+		SkippedJobIds:    result.SkippedJobIDs,
+	}, nil
+}
+
 // DeployFunction writes a function binary and manifest to the functions directory.
 func (s *Server) DeployFunction(ctx context.Context, req *pb.DeployFunctionRequest) (*pb.DeployFunctionResponse, error) {
 	if req.GetName() == "" {

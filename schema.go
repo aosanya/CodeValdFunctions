@@ -38,7 +38,7 @@ func DefaultFunctionsSchema() types.Schema {
 				Properties: []types.PropertyDefinition{
 					// status is the current lifecycle state — see job state machine.
 					// Well-known values: "pending", "running", "completed", "failed",
-					// "cancelled", "retrying".
+					// "cancelled", "retrying", "rolled_back".
 					{Name: "status", Type: types.PropertyTypeString, Required: true},
 					// function_name is the name of the pre-built handler that ran (or is running).
 					{Name: "function_name", Type: types.PropertyTypeString, Required: true},
@@ -67,6 +67,10 @@ func DefaultFunctionsSchema() types.Schema {
 					{Name: "started_at", Type: types.PropertyTypeString},
 					// completed_at is the RFC 3339 timestamp when the job reached a terminal state.
 					{Name: "completed_at", Type: types.PropertyTypeString},
+					// rollback_reason is the operator-supplied reason recorded when the
+					// Job is transitioned to cancelled or rolled_back by the rollback
+					// coordinator (FEAT-20260602-004 Phase 2).
+					{Name: "rollback_reason", Type: types.PropertyTypeString},
 				},
 			},
 			eventreceiver.ReceivedEventTypeDefinition("functions"),

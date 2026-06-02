@@ -38,4 +38,18 @@ type FunctionsManager interface {
 	// stamped on the Job after the function returns it in its result.
 	// Returns ErrJobNotFound if the job does not exist.
 	SetJobWorkflowRunID(ctx context.Context, agencyID, jobID, workflowRunID string) (Job, error)
+
+	// RollbackByWorkflowRun applies the FEAT-20260602-004 rollback contract to
+	// every Job anchored to workflowRunID:
+	//   - In-flight Jobs (pending, running, retrying) transition to
+	//     JobStatusCancelled; one functions.job.cancelled event is emitted per
+	//     transition.
+	//   - Completed or failed Jobs transition to JobStatusRolledBack as a
+	//     frozen audit record; one functions.job.rolled_back event is emitted
+	//     per transition. Function outputs (result, error, retry_count) are
+	//     preserved.
+	//   - Already-cancelled or already-rolled_back Jobs are skipped so the call
+	//     is idempotent.
+	// Returns [ErrWorkflowRunIDRequired] if workflowRunID is empty.
+	RollbackByWorkflowRun(ctx context.Context, agencyID, workflowRunID, reason string) (RollbackByWorkflowRunResult, error)
 }

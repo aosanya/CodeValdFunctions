@@ -26,14 +26,19 @@ Protocol:
 
 The `payload` field is the raw work.pipeline.requested event payload as a
 JSON string. Recognised optional keys:
-  name           — caller-supplied label, unique per agency
-  trigger_event  — free-form label shown in UI (e.g. "qa.scenario-09")
-  initiator      — opaque actor id ("qa-runner", operator email, etc.)
+  name                     — caller-supplied label, unique per agency
+  trigger_event            — free-form label shown in UI (e.g. "qa.scenario-09")
+  initiator                — opaque actor id ("qa-runner", operator email, etc.)
+  failure_pipeline_budget  — FEAT-20260602-007 per-run override; integer.
+                             Priority: payload > Agency.default_failure_pipeline_budget
+                             > WORKFLOW_RUN_FAILURE_BUDGET env > built-in default (5).
 
 Environment:
-  FN_GIT_CLONE_BASE   Cross base URL (e.g. http://codevaldcross:8081)
-  FN_CROSS_AUTH_USER  Cross basic-auth username (optional)
-  FN_CROSS_AUTH_PASS  Cross basic-auth password (optional)
+  FN_GIT_CLONE_BASE              Cross base URL (e.g. http://codevaldcross:8081)
+  FN_CROSS_AUTH_USER             Cross basic-auth username (optional)
+  FN_CROSS_AUTH_PASS             Cross basic-auth password (optional)
+  WORKFLOW_RUN_FAILURE_BUDGET    Default failure-pipeline budget (FEAT-007).
+                                 Overridden by agency or payload value.
 """
 
 import base64
@@ -46,6 +51,12 @@ import urllib.request
 
 DEFAULT_TRIGGER_EVENT = "work.pipeline.requested"
 DEFAULT_INITIATOR     = "unknown"
+
+# FEAT-20260602-007: failure-pipeline budget default. Overridable via
+# WORKFLOW_RUN_FAILURE_BUDGET env. Per-agency override comes from
+# Agency.default_failure_pipeline_budget; per-run override comes from
+# the work.pipeline.requested payload's `failure_pipeline_budget` key.
+DEFAULT_FAILURE_PIPELINE_BUDGET = 5
 
 
 def emit(status, result_obj=None, error=""):
@@ -107,13 +118,18 @@ def first_nonempty(*vals):
     return ""
 
 
-def create_workflow_run(base, agency_id, name, trigger_event, initiator):
+def create_workflow_run(base, agency_id, name, trigger_event, initiator, failure_pipeline_budget=0):
     body = {
         "agency_id":     agency_id,
         "name":          name,
         "trigger_event": trigger_event,
         "initiator":     initiator,
     }
+    # FEAT-20260602-007: only forward when set; CodeValdWork.CreateWorkflowRun
+    # treats zero as "use whatever default the server has." Sending a 0
+    # explicitly would tell the server to lock budget=0, disabling the gate.
+    if failure_pipeline_budget and failure_pipeline_budget > 0:
+        body["failure_pipeline_budget"] = int(failure_pipeline_budget)
     resp = cross_request("POST", f"{base}/work/{agency_id}/workflow-runs", body=body)
     run = resp.get("run") or {}
     run_id = run.get("id") or run.get("workflowRunId") or run.get("workflow_run_id")
@@ -127,6 +143,45 @@ def create_workflow_run(base, agency_id, name, trigger_event, initiator):
         "started_at":    run.get("startedAt") or run.get("started_at", ""),
         "status":        run.get("status", ""),
     }
+
+
+def fetch_agency_default_failure_budget(base, agency_id):
+    """Return the agency's default_failure_pipeline_budget, or 0 on any error
+    (404, network error, missing field). Best-effort lookup — start-pipeline
+    must never block on this."""
+    try:
+        resp = cross_request("GET", f"{base}/agency/{agency_id}")
+    except RuntimeError:
+        return 0
+    agency = resp.get("agency") or resp
+    if not isinstance(agency, dict):
+        return 0
+    for key in ("default_failure_pipeline_budget", "defaultFailurePipelineBudget"):
+        v = agency.get(key)
+        if isinstance(v, (int, float)) and v > 0:
+            return int(v)
+    return 0
+
+
+def resolve_failure_pipeline_budget(base, agency_id, event):
+    """FEAT-20260602-007 priority order: payload > agency > env > built-in default.
+    Returns 0 only if the operator pinned 0 in the payload (which would
+    disable the gate); env/agency 0 falls through to the next layer."""
+    payload_v = event.get("failure_pipeline_budget")
+    if isinstance(payload_v, (int, float)) and payload_v >= 0:
+        return int(payload_v)
+    agency_v = fetch_agency_default_failure_budget(base, agency_id)
+    if agency_v > 0:
+        return agency_v
+    env_raw = os.environ.get("WORKFLOW_RUN_FAILURE_BUDGET", "")
+    if env_raw:
+        try:
+            n = int(env_raw)
+            if n >= 0:
+                return n
+        except ValueError:
+            pass
+    return DEFAULT_FAILURE_PIPELINE_BUDGET
 
 
 def publish(base, agency_id, topic, payload_obj):
@@ -161,8 +216,13 @@ def main():
     trigger_event  = first_nonempty(event.get("trigger_event"), event.get("triggerEvent"), DEFAULT_TRIGGER_EVENT)
     initiator      = first_nonempty(event.get("initiator"), DEFAULT_INITIATOR)
 
+    # FEAT-20260602-007: resolve the failure-pipeline budget once, locking
+    # it on the run at create time. Cross's failure dispatcher reads this
+    # value when gating recovery activations.
+    failure_pipeline_budget = resolve_failure_pipeline_budget(base, agency_id, event)
+
     try:
-        run = create_workflow_run(base, agency_id, name, trigger_event, initiator)
+        run = create_workflow_run(base, agency_id, name, trigger_event, initiator, failure_pipeline_budget)
     except RuntimeError as e:
         fail(f"create workflow run: {e}")
 

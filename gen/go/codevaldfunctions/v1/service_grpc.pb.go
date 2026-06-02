@@ -19,10 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	FunctionsService_ListJobs_FullMethodName       = "/codevaldfunctions.v1.FunctionsService/ListJobs"
-	FunctionsService_GetJob_FullMethodName         = "/codevaldfunctions.v1.FunctionsService/GetJob"
-	FunctionsService_CancelJob_FullMethodName      = "/codevaldfunctions.v1.FunctionsService/CancelJob"
-	FunctionsService_DeployFunction_FullMethodName = "/codevaldfunctions.v1.FunctionsService/DeployFunction"
+	FunctionsService_ListJobs_FullMethodName              = "/codevaldfunctions.v1.FunctionsService/ListJobs"
+	FunctionsService_GetJob_FullMethodName                = "/codevaldfunctions.v1.FunctionsService/GetJob"
+	FunctionsService_CancelJob_FullMethodName             = "/codevaldfunctions.v1.FunctionsService/CancelJob"
+	FunctionsService_RollbackByWorkflowRun_FullMethodName = "/codevaldfunctions.v1.FunctionsService/RollbackByWorkflowRun"
+	FunctionsService_DeployFunction_FullMethodName        = "/codevaldfunctions.v1.FunctionsService/DeployFunction"
 )
 
 // FunctionsServiceClient is the client API for FunctionsService service.
@@ -40,6 +41,12 @@ type FunctionsServiceClient interface {
 	// Error: NOT_FOUND if the job does not exist.
 	// Error: FAILED_PRECONDITION if the job is in a terminal state.
 	CancelJob(ctx context.Context, in *CancelJobRequest, opts ...grpc.CallOption) (*CancelJobResponse, error)
+	// RollbackByWorkflowRun applies the CodeValdFunctions leg of the WorkflowRun
+	// rollback contract (FEAT-20260602-004 Phase 2): in-flight Jobs go to
+	// cancelled; already-terminal Jobs go to rolled_back as a frozen audit
+	// record. Called by CodeValdWork's rollback coordinator.
+	// Error: INVALID_ARGUMENT if workflow_run_id is empty.
+	RollbackByWorkflowRun(ctx context.Context, in *RollbackByWorkflowRunRequest, opts ...grpc.CallOption) (*RollbackByWorkflowRunResponse, error)
 	// DeployFunction installs a new function binary into the functions directory.
 	// The function is immediately discoverable — no restart required.
 	// An AI agent can call this to add new functions at runtime.
@@ -84,6 +91,16 @@ func (c *functionsServiceClient) CancelJob(ctx context.Context, in *CancelJobReq
 	return out, nil
 }
 
+func (c *functionsServiceClient) RollbackByWorkflowRun(ctx context.Context, in *RollbackByWorkflowRunRequest, opts ...grpc.CallOption) (*RollbackByWorkflowRunResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RollbackByWorkflowRunResponse)
+	err := c.cc.Invoke(ctx, FunctionsService_RollbackByWorkflowRun_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *functionsServiceClient) DeployFunction(ctx context.Context, in *DeployFunctionRequest, opts ...grpc.CallOption) (*DeployFunctionResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(DeployFunctionResponse)
@@ -109,6 +126,12 @@ type FunctionsServiceServer interface {
 	// Error: NOT_FOUND if the job does not exist.
 	// Error: FAILED_PRECONDITION if the job is in a terminal state.
 	CancelJob(context.Context, *CancelJobRequest) (*CancelJobResponse, error)
+	// RollbackByWorkflowRun applies the CodeValdFunctions leg of the WorkflowRun
+	// rollback contract (FEAT-20260602-004 Phase 2): in-flight Jobs go to
+	// cancelled; already-terminal Jobs go to rolled_back as a frozen audit
+	// record. Called by CodeValdWork's rollback coordinator.
+	// Error: INVALID_ARGUMENT if workflow_run_id is empty.
+	RollbackByWorkflowRun(context.Context, *RollbackByWorkflowRunRequest) (*RollbackByWorkflowRunResponse, error)
 	// DeployFunction installs a new function binary into the functions directory.
 	// The function is immediately discoverable — no restart required.
 	// An AI agent can call this to add new functions at runtime.
@@ -131,6 +154,9 @@ func (UnimplementedFunctionsServiceServer) GetJob(context.Context, *GetJobReques
 }
 func (UnimplementedFunctionsServiceServer) CancelJob(context.Context, *CancelJobRequest) (*CancelJobResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method CancelJob not implemented")
+}
+func (UnimplementedFunctionsServiceServer) RollbackByWorkflowRun(context.Context, *RollbackByWorkflowRunRequest) (*RollbackByWorkflowRunResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method RollbackByWorkflowRun not implemented")
 }
 func (UnimplementedFunctionsServiceServer) DeployFunction(context.Context, *DeployFunctionRequest) (*DeployFunctionResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method DeployFunction not implemented")
@@ -210,6 +236,24 @@ func _FunctionsService_CancelJob_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _FunctionsService_RollbackByWorkflowRun_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RollbackByWorkflowRunRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FunctionsServiceServer).RollbackByWorkflowRun(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: FunctionsService_RollbackByWorkflowRun_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FunctionsServiceServer).RollbackByWorkflowRun(ctx, req.(*RollbackByWorkflowRunRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _FunctionsService_DeployFunction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeployFunctionRequest)
 	if err := dec(in); err != nil {
@@ -246,6 +290,10 @@ var FunctionsService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CancelJob",
 			Handler:    _FunctionsService_CancelJob_Handler,
+		},
+		{
+			MethodName: "RollbackByWorkflowRun",
+			Handler:    _FunctionsService_RollbackByWorkflowRun_Handler,
 		},
 		{
 			MethodName: "DeployFunction",

@@ -1,0 +1,162 @@
+#!/usr/bin/env python3
+"""
+emit-event — CodeValdFunctions binary function (FEAT-20260602-005).
+
+Publishes a Cross event verbatim. Recovery pipelines use this as their
+terminal step to synthesise the parent step's success event without
+having to ship a bespoke binary — the pipeline declaration is just a
+one-step plan with `function_code: emit-event` and the synthesised
+event spelled out in `function_params`.
+
+Trigger:
+  work.pipeline.requested (or any topic the work plan binds to)
+
+function_params (JSON):
+  {
+    "topic":   "<cross topic to emit>",            required
+    "payload": <object or pre-encoded string>,     required
+    "source":  "<optional source override>"
+  }
+  When `payload` is an object it is serialised to a JSON string before
+  publish (Cross's payload field is always a string).
+
+Effect:
+  POST /pubsub/{agency_id}/events with the supplied topic + payload.
+  Returns the published event echo on success.
+
+Protocol:
+  stdin:  JSON { "job_id": "...", "agency_id": "...", "task_id": "...",
+                 "payload": "<trigger payload as JSON string>",
+                 "function_params": "<function-params JSON>" }
+  stdout: JSON { "status": "ok"|"error", "result": "...", "error": "..." }
+  exit 0 always.
+
+Environment:
+  FN_GIT_CLONE_BASE   Cross base URL (e.g. http://codevaldcross:8081)
+  FN_CROSS_AUTH_USER  Cross basic-auth username (optional)
+  FN_CROSS_AUTH_PASS  Cross basic-auth password (optional)
+"""
+
+import base64
+import json
+import os
+import sys
+import urllib.error
+import urllib.request
+
+
+def emit(status, result_obj=None, error=""):
+    out = {"status": status}
+    if result_obj is not None:
+        out["result"] = json.dumps(result_obj)
+    if error:
+        out["error"] = error
+    print(json.dumps(out))
+    sys.exit(0)
+
+
+def fail(msg):
+    emit("error", error=msg)
+
+
+def auth_header():
+    user = os.environ.get("FN_CROSS_AUTH_USER", "")
+    pw   = os.environ.get("FN_CROSS_AUTH_PASS", "")
+    if not user:
+        return ""
+    return "Basic " + base64.b64encode(f"{user}:{pw}".encode()).decode()
+
+
+def cross_post(url, body):
+    data = json.dumps(body).encode()
+    req = urllib.request.Request(url, data=data, method="POST")
+    hdr = auth_header()
+    if hdr:
+        req.add_header("Authorization", hdr)
+    req.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            raw = resp.read()
+            return json.loads(raw) if raw else {}
+    except urllib.error.HTTPError as e:
+        body_text = e.read().decode()[:300] if e.fp else ""
+        raise RuntimeError(f"POST {url} → {e.code}: {body_text}")
+    except Exception as e:
+        raise RuntimeError(f"POST {url} → {e}")
+
+
+def parse_json_field(raw, field_name):
+    if not raw:
+        return {}
+    if isinstance(raw, dict):
+        return raw
+    try:
+        v = json.loads(raw)
+        return v if isinstance(v, dict) else {}
+    except json.JSONDecodeError as e:
+        raise RuntimeError(f"unparseable {field_name}: {e}")
+
+
+def main():
+    try:
+        inp = json.loads(sys.stdin.read() or "{}")
+    except json.JSONDecodeError as e:
+        fail(f"unparseable stdin: {e}")
+
+    base = os.environ.get("FN_GIT_CLONE_BASE", "").rstrip("/")
+    if not base:
+        fail("FN_GIT_CLONE_BASE not set")
+
+    agency_id = inp.get("agency_id") or ""
+    if not agency_id:
+        # Fall back to agency_id inside the trigger payload — recovery
+        # pipelines invoked via work.pipeline.requested carry it there.
+        try:
+            event = parse_json_field(inp.get("payload", ""), "trigger payload")
+        except RuntimeError as e:
+            fail(str(e))
+        agency_id = event.get("agency_id") or event.get("agencyId") or ""
+    if not agency_id:
+        fail("agency_id missing from input and trigger payload")
+
+    try:
+        params = parse_json_field(inp.get("function_params", ""), "function_params")
+    except RuntimeError as e:
+        fail(str(e))
+
+    topic = params.get("topic") or ""
+    if not topic:
+        fail("function_params.topic is required")
+
+    raw_payload = params.get("payload")
+    if raw_payload is None:
+        fail("function_params.payload is required")
+    if isinstance(raw_payload, (dict, list)):
+        payload_str = json.dumps(raw_payload)
+    elif isinstance(raw_payload, str):
+        payload_str = raw_payload
+    else:
+        payload_str = json.dumps(raw_payload)
+
+    source = params.get("source") or "emit-event"
+
+    body = {
+        "agency_id": agency_id,
+        "topic":     topic,
+        "source":    source,
+        "payload":   payload_str,
+    }
+    try:
+        cross_post(f"{base}/pubsub/{agency_id}/events", body)
+    except RuntimeError as e:
+        fail(f"publish {topic}: {e}")
+
+    emit("ok", result_obj={
+        "topic":     topic,
+        "agency_id": agency_id,
+        "source":    source,
+    })
+
+
+if __name__ == "__main__":
+    main()
