@@ -29,7 +29,7 @@ Bugs in scope for CodeValdFunctions. Mirrors the `mvp.md` / `mvp_done.md` / `mvp
 
 | Bug ID | Title | Severity | Status | Depends On |
 |--------|-------|----------|--------|------------|
-| ~~[BUG-20260603-001](bug-details/BUG-20260603-001_merge-flutter-branch-fires-per-todo-not-per-task.md)~~ | ~~merge-flutter-branch fires once per completed todo instead of once per task~~ | High | ✅ Fixed (2026-06-03) | — |
+| ~~[BUG-20260603-001](bug-details/BUG-20260603-001_merge-flutter-branch-fires-per-todo-not-per-task.md)~~ | ~~merge-flutter-branch fires once per completed todo instead of once per task~~ | High | ✅ Fixed 2026-06-03 — branch HEAD idempotency check added | — |
 | ~~BUG-09-027~~ | ~~`next-task` 404s looking up agent by slug — fixed in CodeValdWork (GetAgent slug fallback)~~ | High | ✅ Fixed (working tree) | [BUG-09-026](../../../CodeValdCross/documentation/3-SofwareDevelopment/bug-details/BUG-09-026_http_publish_skips_fanout.md) (also fixed) |
 
 ### BUG-20260603-001 — merge-flutter-branch fires once per completed todo instead of once per task
