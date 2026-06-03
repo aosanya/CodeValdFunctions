@@ -121,11 +121,14 @@ def pick_developer_agent(base, agency, override_id):
         return None
 
 
-def assign(base, agency, task_id, agent_id):
+def assign(base, agency, task_id, agent_id, workflow_run_id=""):
+    body = {}
+    if workflow_run_id:
+        body["workflow_run_id"] = workflow_run_id
     cross_request(
         "PUT",
         f"{base}/work/{agency}/tasks/{task_id}/assignee/{urllib.parse.quote(agent_id)}",
-        body={},
+        body=body,
     )
 
 
@@ -145,10 +148,12 @@ def main():
 
     payload = inp.get("payload") or ""
     override_agent = ""
+    workflow_run_id = ""
     if payload:
         try:
             pd = json.loads(payload)
             override_agent = pd.get("agent_id", "") or pd.get("agentId", "")
+            workflow_run_id = pd.get("workflow_run_id", "") or pd.get("workflowRunId", "")
         except json.JSONDecodeError:
             pass
 
@@ -183,7 +188,7 @@ def main():
 
     agent_id = agent.get("id") or agent.get("agentId")
     try:
-        assign(base, agency, picked["id"], agent_id)
+        assign(base, agency, picked["id"], agent_id, workflow_run_id)
     except RuntimeError as e:
         fail(f"assign failed: {e}")
 
