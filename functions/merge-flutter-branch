@@ -133,6 +133,36 @@ def main():
         out("ok", result=f"skipped: compile status={status!r}, not merging")
         return
 
+    # Guard: only merge once ALL todos for this workflow run are terminal.
+    # With N todos each triggering a compile, we get N merge attempts. Only
+    # the last one (when every todo is done) should actually merge
+    # (BUG-20260603-001).
+    workflow_run_id = event.get("workflow_run_id", "")
+    if workflow_run_id:
+        try:
+            todos_url = f"{cross_base}/work/{agency_id}/task-todos?workflow_run_id={urllib.parse.quote(workflow_run_id)}"
+            todos_data = cross_get(todos_url)
+            todos = todos_data.get("todos", [])
+            TERMINAL = {"TODO_STATUS_COMPLETED", "TODO_STATUS_FAILED", "TODO_STATUS_CANCELLED"}
+            non_terminal = [t for t in todos if t.get("status", "") not in TERMINAL]
+            if non_terminal:
+                print(
+                    f"merge-flutter-branch: skipping merge — {len(non_terminal)} todo(s) still non-terminal"
+                    f" (run={workflow_run_id})",
+                    file=sys.stderr,
+                )
+                out("ok", result=json.dumps({
+                    "skipped": "todos not yet complete",
+                    "non_terminal_count": len(non_terminal),
+                    "workflow_run_id": workflow_run_id,
+                }))
+                return
+        except RuntimeError as e:
+            # If we can't check todos, log and proceed with merge rather than
+            # silently blocking it — a spurious extra merge is safer than never
+            # merging.
+            print(f"merge-flutter-branch: WARN: could not check todos: {e}", file=sys.stderr)
+
     # Merge the feature branch to main. URL-encode the branch name so that
     # forward slashes (feature/MVP-SF-003-...) don't break Cross's path-segment
     # router — without quoting the slash, the request becomes
