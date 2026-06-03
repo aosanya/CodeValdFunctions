@@ -29,7 +29,21 @@ Bugs in scope for CodeValdFunctions. Mirrors the `mvp.md` / `mvp_done.md` / `mvp
 
 | Bug ID | Title | Severity | Status | Depends On |
 |--------|-------|----------|--------|------------|
+| ~~[BUG-20260603-001](bug-details/BUG-20260603-001_merge-flutter-branch-fires-per-todo-not-per-task.md)~~ | ~~merge-flutter-branch fires once per completed todo instead of once per task~~ | High | ✅ Fixed (2026-06-03) | — |
 | ~~BUG-09-027~~ | ~~`next-task` 404s looking up agent by slug — fixed in CodeValdWork (GetAgent slug fallback)~~ | High | ✅ Fixed (working tree) | [BUG-09-026](../../../CodeValdCross/documentation/3-SofwareDevelopment/bug-details/BUG-09-026_http_publish_skips_fanout.md) (also fixed) |
+
+### BUG-20260603-001 — merge-flutter-branch fires once per completed todo instead of once per task
+
+**Severity:** High — N completed todos → N merge jobs; bloats git log with redundant merges; risks race conditions
+**Status:** 📋 Open
+
+Each `work.todo.completed` event triggers `compile-on-todo-completed` → `compile-flutter`. Each successful compile triggers `merge-on-compile-success` → `merge-flutter-branch`. With N todos, N merge jobs fire for the same branch. QA run 2026-06-03: 13 completed todos → 15 compile-flutter jobs → 15 merge-flutter-branch jobs (expected: 1 merge).
+
+Fix: guard in `merge-flutter-branch` body — before issuing the merge, check that all todos for the task are terminal. If any are still active, exit early with a "skipped" result.
+
+See [bug-details/BUG-20260603-001](bug-details/BUG-20260603-001_merge-flutter-branch-fires-per-todo-not-per-task.md) for fix plan.
+
+---
 
 ### ~~BUG-09-027~~ — `next-task` function 404s on agent lookup ✅
 
