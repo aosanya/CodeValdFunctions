@@ -43,7 +43,7 @@ func DefaultFunctionsSchema() types.Schema {
 					// function_name is the name of the pre-built handler that ran (or is running).
 					{Name: "function_name", Type: types.PropertyTypeString, Required: true},
 					// trigger_event is the full platform event name that created this job
-					// (e.g. "work.task.completed").
+					// (e.g. "task.completed").
 					{Name: "trigger_event", Type: types.PropertyTypeString, Required: true},
 					// trigger_payload is the JSON-encoded event payload received from Cross.
 					{Name: "trigger_payload", Type: types.PropertyTypeString},

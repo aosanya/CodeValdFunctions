@@ -21,7 +21,7 @@ func seedJob(t *testing.T, dm *fakeDataManager, workflowRunID, functionName stri
 		Properties: map[string]any{
 			"status":          string(status),
 			"function_name":   functionName,
-			"trigger_event":   "work.task.completed",
+			"trigger_event":   "task.completed",
 			"trigger_payload": "{}",
 			"task_id":         "",
 			"workflow_run_id": workflowRunID,
