@@ -40,7 +40,7 @@ func New(
 		agencyID,
 		"codevaldfunctions",
 		[]string{"functions.job.created", "functions.job.started", "functions.job.completed", "functions.job.failed", "functions.job.cancelled", "functions.job.rolled_back"},
-		[]string{"work.todo.completed", "functions.job.completed", "git.branch.create", "git.branch.delete", "work.next.requested", "work.pipeline.requested"},
+		[]string{"todo.completed", "functions.job.completed", "git.branch.create", "git.branch.delete", "next.requested", "pipeline.requested"},
 		functionsRoutes(),
 		pingInterval,
 		pingTimeout,

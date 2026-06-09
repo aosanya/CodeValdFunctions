@@ -16,7 +16,7 @@ func newTestManager() FunctionsManager {
 
 func mustCreateJob(t *testing.T, mgr FunctionsManager) Job {
 	t.Helper()
-	job, err := mgr.CreateJob(context.Background(), testAgencyID, "compile", "work.task.completed", `{}`, "", "")
+	job, err := mgr.CreateJob(context.Background(), testAgencyID, "compile", "task.completed", `{}`, "", "")
 	if err != nil {
 		t.Fatalf("CreateJob: %v", err)
 	}
@@ -26,7 +26,7 @@ func mustCreateJob(t *testing.T, mgr FunctionsManager) Job {
 // mustCreateJobWithRun is mustCreateJob plus an explicit workflow_run_id.
 func mustCreateJobWithRun(t *testing.T, mgr FunctionsManager, workflowRunID string) Job {
 	t.Helper()
-	job, err := mgr.CreateJob(context.Background(), testAgencyID, "compile", "work.task.completed", `{}`, "", workflowRunID)
+	job, err := mgr.CreateJob(context.Background(), testAgencyID, "compile", "task.completed", `{}`, "", workflowRunID)
 	if err != nil {
 		t.Fatalf("CreateJob: %v", err)
 	}
@@ -361,7 +361,7 @@ func TestPublish_IncludesWorkflowRunID(t *testing.T) {
 	dm := newFakeDataManager()
 	mgr := NewFunctionsManager(dm, pub, testAgencyID)
 
-	if _, err := mgr.CreateJob(context.Background(), testAgencyID, "compile", "work.todo.completed", `{}`, "", "wfr_pub_test"); err != nil {
+	if _, err := mgr.CreateJob(context.Background(), testAgencyID, "compile", "todo.completed", `{}`, "", "wfr_pub_test"); err != nil {
 		t.Fatalf("CreateJob: %v", err)
 	}
 

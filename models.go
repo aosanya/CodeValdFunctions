@@ -48,7 +48,7 @@ type Job struct {
 	FunctionName string
 
 	// TriggerEvent is the platform event name that created this job
-	// (e.g. "work.task.completed").
+	// (e.g. "task.completed").
 	TriggerEvent string
 
 	// TriggerPayload is the JSON-encoded event payload received from Cross.
